@@ -588,11 +588,21 @@ function MapView() {
       </div>
 
       <div className="rounded-2xl overflow-hidden shadow-md relative isolate" style={{ height: '54vh', minHeight: '400px' }}>
-        <MapContainer bounds={bounds} scrollWheelZoom style={{ width: '100%', height: '100%' }}>
+        <MapContainer
+          bounds={bounds}
+          scrollWheelZoom
+          zoomSnap={0.25}
+          zoomDelta={0.5}
+          wheelPxPerZoomLevel={120}
+          bounceAtZoomLimits={false}
+          style={{ width: '100%', height: '100%', backgroundColor: '#EDEDEB' }}
+        >
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
             subdomains="abcd"
+            updateWhenZooming={false}
+            keepBuffer={8}
           />
           <FitToMarkers markers={visibleMarkers} filterKey={`${region}-${placeType}`} />
           {visibleMarkers.map((m) => (

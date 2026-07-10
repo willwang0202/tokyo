@@ -17,8 +17,8 @@ const AREAS = {
       { name: 'Monsoon Cafe', tag: 'Ikspiari 3F・泰越料理', note: '營業到 22:30，玩晚了也不怕餓肚子', rating: 4.3, placeId: 'ChIJyyO31hF9GGARhpUMZWBDxNQ' },
       { name: 'Rainforest Cafe', tag: 'Ikspiari 2F・美式主題餐廳', note: '叢林造景很有氣氛，適合放鬆拍照', rating: 4.0, placeId: 'ChIJyyO31hF9GGARyQTJU6OkWeo' },
       { name: 'Ikspiari Kitchen', tag: '美食街', note: '選擇多、出餐快，趕行程時的好選擇', rating: 3.4, placeId: 'ChIJPYu2AiZ9GGARKpMXFATtZmE' },
-      { name: 'Cape Cod Cook-Off', tag: '迪士尼海洋・美式漢堡', note: '園內人氣速食，看秀配漢堡', rating: 4.1, placeId: 'ChIJfUIqYRN9GGARxjDrLwp3rMY' },
-      { name: 'Restaurant Sakura', tag: '迪士尼樂園・和食', note: '園內少見的正餐選項，天婦羅定食不錯', rating: 4.0, placeId: 'ChIJFc3yGBN9GGARdLNhJV9e3Qs' },
+      { name: 'Cape Cod Cook-Off', tag: '迪士尼海洋・美式漢堡', note: '園內人氣速食，看秀配漢堡', rating: 4.1, placeId: null },
+      { name: 'Restaurant Sakura', tag: '東京迪士尼海洋・和食', note: '園內少見的正餐選項，天婦羅定食不錯', rating: 4.0, placeId: null },
     ],
     tips: [
       'Hilton Tokyo Bay 樓下就有 Lawson，消夜、飲料很方便',
@@ -34,8 +34,8 @@ const AREAS = {
       { name: 'Monsoon Cafe', tag: 'Aqua City 4F・泰越料理', note: '東京灣景觀，晚餐氣氛很好', rating: 4.3, placeId: 'ChIJL8dbO_aJGGARpzmnVUUI4n4' },
       { name: 'YORIMICHI ODAIBA', tag: 'Aqua City・創作和食', note: '正對彩虹大橋，招牌布丁別錯過', rating: 4.0, placeId: 'ChIJqZfFV9GJGGARJG-2zHeyUdc' },
       { name: 'Sizzler', tag: 'Aqua City・牛排沙拉吧', note: '吃到飽沙拉吧＋海景，份量實在', rating: 4.1, placeId: 'ChIJ819zO_aJGGARsmspYwftPuw' },
-      { name: 'Bills Odaiba', tag: 'Decks 3F・早午餐', note: '鬆餅名店，早午餐首選', rating: 4.2, placeId: 'ChIJgUkr0PaJGGARDPmzLJx3rLE' },
-      { name: 'Tsukiji Sushiko', tag: 'Aqua City 1F・迴轉壽司', note: '平價壽司，不用跑築地也吃得到', rating: 3.8, placeId: 'ChIJv1K_OvaJGGARhFoExLbHJjA' },
+      { name: 'bills お台場', tag: 'Decks 3F・早午餐', note: '鬆餅名店，早午餐首選', rating: 4.2, placeId: null },
+      { name: '築地寿司清', tag: 'Aqua City・壽司', note: '平價壽司，不用跑築地也吃得到', rating: 3.8, placeId: null },
     ],
     tips: [
       'teamLab Planets 要脫鞋涉水，建議穿快乾短褲／裙，置物櫃免費使用',
@@ -50,8 +50,8 @@ const AREAS = {
       { name: 'Tsujita 沾麵', tag: '神田末広町・濃厚沾麵', note: '評價 4.9，秋葉原數一數二的沾麵', rating: 4.9, placeId: 'ChIJazjtQgCNGGARO606yF6kY7I' },
       { name: 'Kyushu Jangara', tag: '豚骨拉麵', note: '位子小但出餐快，也有素食選項', rating: 4.4, placeId: 'ChIJ99Gizh2MGGARuDpsme65T9s' },
       { name: 'Maidreamin 本店', tag: '女僕咖啡廳', note: '想體驗一次秋葉原限定文化的話', rating: 4.9, placeId: 'ChIJyR7AdR6MGGAROowxIYdMsj0' },
-      { name: '牛かつ もと村', tag: '炸牛排定食', note: '石板自烤炸牛排，外酥內嫩', rating: 4.5, placeId: 'ChIJDzVfxB6MGGARhB5ZxD9XvUk' },
-      { name: 'CoCo 壱番屋', tag: '秋葉原站前・咖哩飯', note: '快速方便，客製化辣度和配料', rating: 4.0, placeId: 'ChIJEUmZ7h6MGGARQdnl8F5c9ek' },
+      { name: '牛かつ もと村 秋葉原店', tag: '炸牛排定食', note: '石板自烤炸牛排，外酥內嫩', rating: 4.5, placeId: null },
+      { name: 'CoCo壱番屋 秋葉原駅前店', tag: '咖哩飯', note: '快速方便，客製化辣度和配料', rating: 4.0, placeId: null },
     ],
     tips: [
       '扭蛋會館整層都是機台，記得先換好百圓硬幣',
@@ -66,8 +66,8 @@ const AREAS = {
       { name: '今半', tag: '高島屋 14F・壽喜燒', note: '逛完百貨不用再移動，直接吃晚餐', rating: null, placeId: 'ChIJMxx7bsWMGGARdrUfch90sVw' },
       { name: '思い出橫丁', tag: 'Omoide Yokocho・串燒小巷', note: '昭和氛圍的窄巷，跟白天的新宿很不一樣', rating: 4.2, placeId: 'ChIJP9eKBdeMGGAR0zzBXJNVj5A' },
       { name: '伊勢丹新宿', tag: '地下美食街', note: '熟食、甜點、伴手禮一次逛完', rating: null, placeId: null },
-      { name: 'Fuunji', tag: '代代木・沾麵', note: '新宿站南口排隊名店，魚介濃厚湯底', rating: 4.6, placeId: 'ChIJr9-u0deMGGARjPLbKrW6QjI' },
-      { name: '磯丸水產', tag: '新宿東口・海鮮居酒屋', note: '24 小時營業，桌上自烤海鮮', rating: 3.9, placeId: 'ChIJGcI8tcaMGGARf3t5M8u3Gpc' },
+      { name: '風雲児 新宿', tag: '代代木・沾麵', note: '新宿站南口排隊名店，魚介濃厚湯底', rating: 4.6, placeId: null },
+      { name: '磯丸水産 新宿東口店', tag: '海鮮居酒屋', note: '24 小時營業，桌上自烤海鮮', rating: 3.9, placeId: null },
     ],
     tips: [
       'Don Quijote 新宿店 24 小時營業，最後一晚買伴手禮／藥妝很方便，記得帶護照退稅',
@@ -129,10 +129,12 @@ const DAYS = [
 const NEUTRAL = '#A9A398';
 const NEUTRAL_TINT = '#EFEDE7';
 
-const mapLink = (f) =>
-  f.placeId
-    ? `https://www.google.com/maps/place/?q=place_id:${f.placeId}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(f.name + ' ' + (f.tag || ''))}`;
+const mapLink = (f) => {
+  const query = encodeURIComponent(`${f.name} ${f.tag || ''}`.trim());
+  return f.placeId
+    ? `https://www.google.com/maps/search/?api=1&query=${query}&query_place_id=${f.placeId}`
+    : `https://www.google.com/maps/search/?api=1&query=${query}`;
+};
 
 /* ---------------------------------------------------------
    SUBCOMPONENTS
@@ -143,7 +145,7 @@ function DayTab({ day, active, onClick }) {
     <button
       onClick={onClick}
       className={`flex-shrink-0 rounded-2xl px-3 py-3 text-left transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
-        active ? 'text-white shadow-lg scale-[1.02]' : 'bg-white text-stone-700 hover:shadow-md hover:scale-[1.01]'
+        active ? 'text-white shadow-lg' : 'bg-white text-stone-700 hover:shadow-md'
       }`}
       style={{ width: '74px', backgroundColor: active ? '#1C1F26' : undefined }}
     >
@@ -181,11 +183,10 @@ function EventRow({ ev, isLast, onAreaClick, index }) {
   return (
     <div
       ref={ref}
-      className="flex gap-4 transition-all duration-500 ease-out"
+      className="flex gap-4"
       style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(16px)',
-        transitionDelay: `${index * 60}ms`,
+        opacity: 0,
+        animation: visible ? `fadeUp 0.5s ease-out ${index * 60}ms both` : 'none',
       }}
     >
       <div className="flex flex-col items-center flex-shrink-0">
@@ -273,12 +274,8 @@ function AreaModal({ area, onClose }) {
                   href={mapLink(f)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-start justify-between gap-3 p-3 rounded-xl bg-stone-50 hover:bg-stone-100 transition-all duration-200 hover:shadow-sm hover:translate-x-0.5 focus:outline-none focus-visible:ring-2"
-                  style={{
-                    opacity: show ? 1 : 0,
-                    transform: show ? 'translateY(0)' : 'translateY(8px)',
-                    transition: `all 0.3s ease-out ${150 + i * 50}ms`,
-                  }}
+                  className="flex items-start justify-between gap-3 p-3 rounded-xl bg-stone-50 hover:bg-stone-100 hover:shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2"
+                  style={{ animation: `fadeUp 0.35s ease-out ${150 + i * 50}ms both` }}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -336,8 +333,12 @@ export default function TokyoTripPlanner() {
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
         @media (prefers-reduced-motion: reduce) {
-          * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+          * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-delay: 0.01ms !important; }
         }
       `}</style>
 
@@ -390,7 +391,7 @@ export default function TokyoTripPlanner() {
 
         {/* Day title */}
         <div className="px-5 pt-5 pb-1">
-          <h2 className="text-lg font-bold text-stone-800 transition-all duration-300">{day.title}</h2>
+          <h2 key={dayKey} className="text-lg font-bold text-stone-800" style={{ animation: 'fadeUp 0.4s ease-out both' }}>{day.title}</h2>
         </div>
 
         {/* Timeline */}

@@ -96,7 +96,7 @@ const AREAS = {
     food: [
       { name: '今半', tag: '高島屋 14F・壽喜燒', note: '逛完百貨不用再移動，直接吃晚餐', rating: null, placeId: 'ChIJMxx7bsWMGGARdrUfch90sVw', lat: 35.6873, lng: 139.7028 },
       { name: '思い出橫丁', tag: 'Omoide Yokocho・串燒小巷', note: '昭和氛圍的窄巷，跟白天的新宿很不一樣', rating: 4.2, placeId: 'ChIJP9eKBdeMGGAR0zzBXJNVj5A', lat: 35.6934, lng: 139.6996 },
-      { name: '伊勢丹新宿', tag: '地下美食街', note: '熟食、甜點、伴手禮一次逛完', rating: null, placeId: null, lat: 35.6917, lng: 139.7046 },
+      { name: '伊勢丹新宿', tag: '地下美食街', note: '熟食、甜點、伴手禮一次逛完', rating: null, placeId: null },
       { name: '風雲児 新宿', tag: '代代木・沾麵', note: '新宿站南口排隊名店，魚介濃厚湯底', rating: 4.6, placeId: null, lat: 35.6853, lng: 139.6995 },
       { name: '磯丸水産 新宿東口店', tag: '海鮮居酒屋', note: '24 小時營業，桌上自烤海鮮', rating: 3.9, placeId: null, lat: 35.6938, lng: 139.7015 },
       { name: '六歌仙', tag: '西新宿・和牛燒肉', note: '和牛燒肉＋涮涮鍋吃到飽，熱門時段建議先訂位', rating: 4.3, placeId: null, lat: 35.6938, lng: 139.6975 },
@@ -268,15 +268,7 @@ const EXTRA_POIS = [
   { name: '銀座三越', tag: '百貨・銀座地標', areaKey: 'more', type: 'shopping', icon: Building2, lat: 35.6717, lng: 139.7650 },
   { name: '表參道之丘', tag: '安藤忠雄設計・精品', areaKey: 'more', type: 'shopping', icon: Building2, lat: 35.6672, lng: 139.7086, q: '表参道ヒルズ' },
   { name: '東京站一番街', tag: '動漫街・伴手禮', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.6798, lng: 139.7694, q: '東京駅一番街' },
-  { name: '舟和 本店', tag: '淺草・芋羊羹', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.7119, lng: 139.7938, q: '舟和 本店 浅草' },
-  { name: '常盤堂雷おこし本舖', tag: '雷門旁・雷米香', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.7108, lng: 139.7961 },
-  { name: '日本橋錦豐琳', tag: '花林糖伴手禮', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.6837, lng: 139.7739, q: '日本橋錦豊琳' },
-  // 飯店
-  { name: '東京帝國飯店', tag: '老牌奢華飯店・日比谷', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6721, lng: 139.7585, q: '帝国ホテル東京' },
-  { name: '東京新大谷飯店', tag: '日式庭園飯店', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6802, lng: 139.7347, q: 'ホテルニューオータニ 東京' },
-  { name: '東京皇宮飯店', tag: '皇居旁・丸之內', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6845, lng: 139.7614, q: 'パレスホテル東京' },
-  { name: '東京椿山莊大飯店', tag: '庭園・雲海景觀', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.7128, lng: 139.7266, q: 'ホテル椿山荘東京' },
-  { name: '東京車站大飯店', tag: '丸之內站舍內・古蹟飯店', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6816, lng: 139.7655, q: '東京ステーションホテル' },
+  { name: '伊勢丹新宿店', tag: '百貨・地下美食街', areaKey: 'shinjuku', type: 'shopping', icon: Building2, lat: 35.6917, lng: 139.7046, q: '伊勢丹新宿店' },
   // 近郊小旅行
   { name: '橫濱', tag: '一日遊・港未來 21', areaKey: 'daytrip', type: 'sight', icon: Camera, lat: 35.4548, lng: 139.6317, q: '横浜みなとみらい' },
   { name: '鎌倉', tag: '一日遊・大佛與古都', areaKey: 'daytrip', type: 'sight', icon: Landmark, lat: 35.3192, lng: 139.5497, q: '鎌倉駅' },

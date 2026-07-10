@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   PlaneTakeoff, PlaneLanding, Hotel, Luggage, Ship, Castle, Sparkles,
   ShoppingBag, Utensils, Gift, Zap, Train, Building2, Moon, Coffee,
-  MapPin, X, Star, Map as MapIcon, List
+  MapPin, X, Star, Map as MapIcon, List, Landmark, Camera, TreePine,
+  Fish, Drama, Palette, PawPrint, Music, Mountain
 } from 'lucide-react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -221,6 +222,69 @@ const MAP_STATIONS = [
   { name: '新宿駅', line: 'JR 山手線・中央線', areaKey: 'shinjuku', lat: 35.6896, lng: 139.7006 },
 ];
 
+/* 觀光推薦 — 出自 gltjp.com 東京必去景點特輯（q = Google Maps 搜尋字串） */
+
+const EXTRA_REGIONS = {
+  more: { key: 'more', label: '更多東京', color: '#5B8A72' },
+  daytrip: { key: 'daytrip', label: '近郊', color: '#B08968' },
+};
+
+const EXTRA_POIS = [
+  // 經典景點
+  { name: '明治神宮', tag: '神社・原宿站旁', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.6764, lng: 139.6993 },
+  { name: '淺草寺', tag: '東京最古老寺院・雷門', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.7148, lng: 139.7967, q: '浅草寺' },
+  { name: '東京晴空塔', tag: '634m 展望塔', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.7101, lng: 139.8107, q: '東京スカイツリー' },
+  { name: '墨田水族館', tag: '晴空塔城內・水族館', areaKey: 'more', type: 'sight', icon: Fish, lat: 35.7098, lng: 139.8095, q: 'すみだ水族館' },
+  { name: '上野動物園', tag: '熊貓・日本最老動物園', areaKey: 'more', type: 'sight', icon: PawPrint, lat: 35.7156, lng: 139.7714 },
+  { name: '上野公園', tag: '春季櫻花祭會場', areaKey: 'more', type: 'sight', icon: TreePine, lat: 35.7141, lng: 139.7734, q: '上野恩賜公園' },
+  { name: '新宿御苑', tag: '庭園・楓紅櫻花名所', areaKey: 'shinjuku', type: 'sight', icon: TreePine, lat: 35.6852, lng: 139.7100 },
+  { name: '東京鐵塔', tag: '333m 經典地標', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.6586, lng: 139.7454, q: '東京タワー' },
+  { name: '澀谷十字路口', tag: '世界最繁忙十字路口', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.6595, lng: 139.7005, q: '渋谷スクランブル交差点' },
+  { name: 'SHIBUYA SKY', tag: '澀谷 229m 露天展望台', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.6585, lng: 139.7025 },
+  { name: '歌舞伎座', tag: '銀座・歌舞伎劇場', areaKey: 'more', type: 'sight', icon: Drama, lat: 35.6697, lng: 139.7679 },
+  { name: '三鷹之森吉卜力美術館', tag: '宮崎駿・需預約', areaKey: 'more', type: 'sight', icon: Palette, lat: 35.6962, lng: 139.5704, q: '三鷹の森ジブリ美術館' },
+  { name: '東京哈利波特影城', tag: '豐島園・需預約', areaKey: 'more', type: 'sight', icon: Sparkles, lat: 35.7420, lng: 139.6497, q: 'ワーナー ブラザース スタジオツアー東京' },
+  { name: '柴又帝釋天參道', tag: '昭和下町老街', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.7587, lng: 139.8777, q: '柴又帝釈天' },
+  { name: '東京車站丸之內站舍', tag: '百年紅磚車站', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.6809, lng: 139.7649, q: '東京駅丸の内駅舎' },
+  { name: '彩虹大橋', tag: '台場地標・可步行', areaKey: 'daiba', type: 'sight', icon: Camera, lat: 35.6365, lng: 139.7632, q: 'レインボーブリッジ' },
+  { name: '築地場外市場', tag: '海鮮早餐・小吃', areaKey: 'more', type: 'food', icon: Fish, lat: 35.6654, lng: 139.7707 },
+  { name: '豐洲市場', tag: '鮪魚拍賣見學', areaKey: 'daiba', type: 'food', icon: Fish, lat: 35.6455, lng: 139.7857, q: '豊洲市場' },
+  { name: '麻布台之丘', tag: '新地標・teamLab Borderless', areaKey: 'more', type: 'shopping', icon: Building2, lat: 35.6604, lng: 139.7413, q: '麻布台ヒルズ' },
+  { name: '都廳回憶鋼琴', tag: '免費展望台・街頭鋼琴', areaKey: 'shinjuku', type: 'sight', icon: Music, lat: 35.6896, lng: 139.6921, q: '東京都庁舎 展望室' },
+  { name: '淺草時代屋', tag: '人力車・和服體驗', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.7115, lng: 139.7935, q: '浅草 時代屋' },
+  { name: '交響樂號遊輪', tag: '東京灣晚餐郵輪・日之出埠頭', areaKey: 'more', type: 'sight', icon: Ship, lat: 35.6494, lng: 139.7608, q: 'シンフォニークルーズ 日の出埠頭' },
+  { name: '淺草鷲神社', tag: '11 月酉之市', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.7222, lng: 139.7929, q: '浅草 鷲神社' },
+  // 名店美食
+  { name: '鰻 宮川', tag: '大塚・鰻魚飯老舖', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.7318, lng: 139.7288, q: 'うなぎ 宮川 大塚' },
+  { name: '壽司大', tag: '豐洲市場・排隊壽司', areaKey: 'daiba', type: 'food', icon: Utensils, lat: 35.6459, lng: 139.7867, q: '寿司大 豊洲' },
+  { name: '天婦羅近藤', tag: '銀座・米其林天婦羅', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6699, lng: 139.7625, q: 'てんぷら近藤 銀座' },
+  { name: '更科堀井', tag: '麻布十番・蕎麥麵老舖', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6559, lng: 139.7365, q: '更科堀井 麻布十番' },
+  { name: '人形町今半 本店', tag: '壽喜燒百年老店', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6862, lng: 139.7824, q: '人形町今半 本店' },
+  { name: '東京拉麵街', tag: '東京站一番街 B1', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6803, lng: 139.7687, q: '東京ラーメンストリート' },
+  // 購物・伴手禮
+  { name: '阿美橫丁', tag: '上野・平價商店街', areaKey: 'more', type: 'shopping', icon: ShoppingBag, lat: 35.7106, lng: 139.7745, q: 'アメ横' },
+  { name: '竹下通', tag: '原宿・青少年潮流街', areaKey: 'more', type: 'shopping', icon: ShoppingBag, lat: 35.6716, lng: 139.7031, q: '竹下通り' },
+  { name: '戶越銀座商店街', tag: '東京最長商店街', areaKey: 'more', type: 'shopping', icon: ShoppingBag, lat: 35.6160, lng: 139.7156, q: '戸越銀座商店街' },
+  { name: '銀座三越', tag: '百貨・銀座地標', areaKey: 'more', type: 'shopping', icon: Building2, lat: 35.6717, lng: 139.7650 },
+  { name: '表參道之丘', tag: '安藤忠雄設計・精品', areaKey: 'more', type: 'shopping', icon: Building2, lat: 35.6672, lng: 139.7086, q: '表参道ヒルズ' },
+  { name: '東京站一番街', tag: '動漫街・伴手禮', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.6798, lng: 139.7694, q: '東京駅一番街' },
+  { name: '舟和 本店', tag: '淺草・芋羊羹', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.7119, lng: 139.7938, q: '舟和 本店 浅草' },
+  { name: '常盤堂雷おこし本舖', tag: '雷門旁・雷米香', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.7108, lng: 139.7961 },
+  { name: '日本橋錦豐琳', tag: '花林糖伴手禮', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.6837, lng: 139.7739, q: '日本橋錦豊琳' },
+  // 飯店
+  { name: '東京帝國飯店', tag: '老牌奢華飯店・日比谷', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6721, lng: 139.7585, q: '帝国ホテル東京' },
+  { name: '東京新大谷飯店', tag: '日式庭園飯店', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6802, lng: 139.7347, q: 'ホテルニューオータニ 東京' },
+  { name: '東京皇宮飯店', tag: '皇居旁・丸之內', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6845, lng: 139.7614, q: 'パレスホテル東京' },
+  { name: '東京椿山莊大飯店', tag: '庭園・雲海景觀', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.7128, lng: 139.7266, q: 'ホテル椿山荘東京' },
+  { name: '東京車站大飯店', tag: '丸之內站舍內・古蹟飯店', areaKey: 'more', type: 'hotel', icon: Hotel, lat: 35.6816, lng: 139.7655, q: '東京ステーションホテル' },
+  // 近郊小旅行
+  { name: '橫濱', tag: '一日遊・港未來 21', areaKey: 'daytrip', type: 'sight', icon: Camera, lat: 35.4548, lng: 139.6317, q: '横浜みなとみらい' },
+  { name: '鎌倉', tag: '一日遊・大佛與古都', areaKey: 'daytrip', type: 'sight', icon: Landmark, lat: 35.3192, lng: 139.5497, q: '鎌倉駅' },
+  { name: '河口湖', tag: '兩天一夜・富士山景', areaKey: 'daytrip', type: 'sight', icon: Mountain, lat: 35.5036, lng: 138.7644, q: '河口湖' },
+  { name: '箱根', tag: '兩天一夜・溫泉', areaKey: 'daytrip', type: 'sight', icon: Mountain, lat: 35.2329, lng: 139.1058, q: '箱根湯本' },
+  { name: '輕井澤', tag: '兩天一夜・避暑勝地', areaKey: 'daytrip', type: 'sight', icon: TreePine, lat: 36.3428, lng: 138.6353, q: '軽井沢駅' },
+];
+
 const POI_MARKER_PX = 32;
 const FOOD_MARKER_PX = 25;
 const STATION_MARKER_PX = 20;
@@ -264,11 +328,14 @@ const FOOD_ICONS = Object.fromEntries(
   Object.values(AREAS).map((a) => [a.key, makeMarkerIcon(a.color, Utensils, FOOD_MARKER_PX)])
 );
 
+const regionColor = (areaKey) =>
+  AREAS[areaKey]?.color ?? EXTRA_REGIONS[areaKey]?.color ?? AIRPORT_COLOR;
+
 const ALL_MARKERS = [
-  ...MAP_POIS.map((p) => ({
+  ...[...MAP_POIS, ...EXTRA_POIS].map((p) => ({
     ...p,
-    href: placeSearchLink(p.name),
-    markerIcon: makeMarkerIcon(p.areaKey ? AREAS[p.areaKey].color : AIRPORT_COLOR, p.icon, POI_MARKER_PX),
+    href: placeSearchLink(p.q || p.name),
+    markerIcon: makeMarkerIcon(regionColor(p.areaKey), p.icon, p.type === 'food' ? FOOD_MARKER_PX : POI_MARKER_PX),
   })),
   ...Object.values(AREAS).flatMap((a) =>
     a.food.filter((f) => f.lat != null).map((f) => ({
@@ -285,6 +352,7 @@ const ALL_MARKERS = [
 const REGION_FILTERS = [
   { key: 'all', label: '全部區域' },
   ...Object.values(AREAS).map((a) => ({ key: a.key, label: a.short, color: a.color, dot: a.color })),
+  ...Object.values(EXTRA_REGIONS).map((r) => ({ key: r.key, label: r.label, color: r.color, dot: r.color })),
 ];
 
 const TYPE_FILTERS = [
@@ -571,7 +639,9 @@ function MapView() {
   const [placeType, setPlaceType] = useState('all');
 
   const bounds = useMemo(
-    () => L.latLngBounds(ALL_MARKERS.map((p) => [p.lat, p.lng])).pad(0.06),
+    () => L.latLngBounds(
+      ALL_MARKERS.filter((m) => m.areaKey !== 'daytrip').map((p) => [p.lat, p.lng])
+    ).pad(0.06),
     []
   );
 
@@ -604,7 +674,10 @@ function MapView() {
             updateWhenZooming={false}
             keepBuffer={8}
           />
-          <FitToMarkers markers={visibleMarkers} filterKey={`${region}-${placeType}`} />
+          <FitToMarkers
+            markers={region === 'all' ? visibleMarkers.filter((m) => m.areaKey !== 'daytrip') : visibleMarkers}
+            filterKey={`${region}-${placeType}`}
+          />
           {visibleMarkers.map((m) => (
             <Marker key={`${m.areaKey}-${m.name}`} position={[m.lat, m.lng]} icon={m.markerIcon}>
               <Popup>

@@ -19,6 +19,11 @@ const AREAS = {
       { name: 'Ikspiari Kitchen', tag: '美食街', note: '選擇多、出餐快，趕行程時的好選擇', rating: 3.4, placeId: 'ChIJPYu2AiZ9GGARKpMXFATtZmE' },
       { name: 'Cape Cod Cook-Off', tag: '迪士尼海洋・美式漢堡', note: '園內人氣速食，看秀配漢堡', rating: 4.1, placeId: null },
       { name: 'Restaurant Sakura', tag: '東京迪士尼海洋・和食', note: '園內少見的正餐選項，天婦羅定食不錯', rating: 4.0, placeId: null },
+      { name: '築地玉寿司 イクスピアリ店', tag: 'Ikspiari 4F・壽司', note: '築地起家的老字號，玩完樂園想吃壽司就靠它', rating: 4.0, placeId: null },
+    ],
+    shops: [
+      { name: 'Bon Voyage', tag: '舞浜站旁・迪士尼官方商店', note: '園區外最大的迪士尼商品店，來不及在園內買的紀念品這裡補' },
+      { name: 'Ikspiari', tag: '舞浜站直結・購物中心', note: '服飾、雜貨、超市和電影院，回飯店前順路逛' },
     ],
     tips: [
       'Hilton Tokyo Bay 樓下就有 Lawson，消夜、飲料很方便',
@@ -36,6 +41,13 @@ const AREAS = {
       { name: 'Sizzler', tag: 'Aqua City・牛排沙拉吧', note: '吃到飽沙拉吧＋海景，份量實在', rating: 4.1, placeId: 'ChIJ819zO_aJGGARsmspYwftPuw' },
       { name: 'bills お台場', tag: 'Decks 3F・早午餐', note: '鬆餅名店，早午餐首選', rating: 4.2, placeId: null },
       { name: '築地寿司清', tag: 'Aqua City・壽司', note: '平價壽司，不用跑築地也吃得到', rating: 3.8, placeId: null },
+      { name: '東京ラーメン国技館 舞', tag: 'Aqua City 5F・拉麵主題館', note: '六家人氣拉麵店同場競技，配東京灣海景吃麵', rating: 3.8, placeId: null },
+      { name: 'KUA`AINA アクアシティお台場店', tag: 'Aqua City 4F・夏威夷漢堡', note: '夏威夷來的酪梨漢堡名店，份量十足', rating: 4.0, placeId: null },
+    ],
+    shops: [
+      { name: 'THE GUNDAM BASE TOKYO', tag: 'DiverCity 7F・鋼普拉', note: '鋼普拉旗艦店，本館要事前抽選，Annex 可以直接逛' },
+      { name: '台場一丁目商店街', tag: 'Decks 4F・昭和復古街', note: '復古糖果店、懷舊遊戲機台，很好殺時間' },
+      { name: 'DiverCity Tokyo Plaza', tag: '大型購物中心', note: '門口就是獨角獸鋼彈立像，定時有變身演出' },
     ],
     tips: [
       'teamLab Planets 要脫鞋涉水，建議穿快乾短褲／裙，置物櫃免費使用',
@@ -52,6 +64,20 @@ const AREAS = {
       { name: 'Maidreamin 本店', tag: '女僕咖啡廳', note: '想體驗一次秋葉原限定文化的話', rating: 4.9, placeId: 'ChIJyR7AdR6MGGAROowxIYdMsj0' },
       { name: '牛かつ もと村 秋葉原店', tag: '炸牛排定食', note: '石板自烤炸牛排，外酥內嫩', rating: 4.5, placeId: null },
       { name: 'CoCo壱番屋 秋葉原駅前店', tag: '咖哩飯', note: '快速方便，客製化辣度和配料', rating: 4.0, placeId: null },
+      { name: 'とんかつ 丸五', tag: '炸豬排', note: '秋葉原豬排名店，厚切里肌外酥內嫩，開店前就開始排', rating: 4.4, placeId: null },
+      { name: '牛丼専門サンボ', tag: '牛丼', note: '秋葉原傳說級牛丼，便宜大碗、翻桌超快', rating: 4.2, placeId: null },
+    ],
+    shops: [
+      { name: 'アニメイト秋葉原本館', tag: 'Animate・動漫周邊', note: '漫畫、BD、角色周邊最齊全的旗艦店' },
+      { name: '秋葉原ラジオ会館', tag: 'Radio Kaikan・公仔大樓', note: '10 層樓公仔聖地，海洋堂、K-BOOKS 都在這' },
+      { name: 'Mandarake Complex', tag: '中古同人・公仔', note: '8 層樓挖寶天堂，絕版品和中古公仔' },
+      { name: '秋葉原ガチャポン会館', tag: '扭蛋會館', note: '數百台扭蛋機一次轉個夠，先換好百圓硬幣' },
+      { name: 'コトブキヤ秋葉原館', tag: 'Kotobukiya・模型公仔', note: '壽屋直營店，原創模型系列很齊' },
+      { name: 'TAMASHII NATIONS STORE TOKYO', tag: '萬代官方直營', note: 'S.H.Figuarts、超合金魂，限定品最多' },
+      { name: 'スーパーポテト秋葉原店', tag: 'Super Potato・懷舊遊戲', note: '紅白機、GB、老 PS 遊戲，任天堂懷舊迷必逛' },
+      { name: 'GiGO 秋葉原1号館', tag: '電玩遊樂場', note: '夾娃娃和大型機台，1～5 號館沿路都是' },
+      { name: 'ヨドバシAkiba', tag: 'Yodobashi・電器', note: 'Switch、PS5 遊戲和電器一次買齊，可退稅' },
+      { name: 'ビックカメラAKIBA', tag: 'Bic Camera・電器', note: '跟 Yodobashi 比價用，遊戲、相機、藥妝都有' },
     ],
     tips: [
       '扭蛋會館整層都是機台，記得先換好百圓硬幣',
@@ -68,10 +94,24 @@ const AREAS = {
       { name: '伊勢丹新宿', tag: '地下美食街', note: '熟食、甜點、伴手禮一次逛完', rating: null, placeId: null },
       { name: '風雲児 新宿', tag: '代代木・沾麵', note: '新宿站南口排隊名店，魚介濃厚湯底', rating: 4.6, placeId: null },
       { name: '磯丸水産 新宿東口店', tag: '海鮮居酒屋', note: '24 小時營業，桌上自烤海鮮', rating: 3.9, placeId: null },
+      { name: '六歌仙', tag: '西新宿・和牛燒肉', note: '和牛燒肉＋涮涮鍋吃到飽，熱門時段建議先訂位', rating: 4.3, placeId: null },
+      { name: '名代とんかつ かつくら 新宿高島屋店', tag: '高島屋 14F・炸豬排', note: '京都來的豬排名店，現磨芝麻沾醬很講究', rating: 4.1, placeId: null },
+      { name: 'うなぎ 登亭 新宿店', tag: '鰻魚飯', note: '老字號平價鰻魚飯，鰻重不用排大隊也吃得到', rating: 4.0, placeId: null },
+      { name: 'すしざんまい 新宿東口店', tag: '壽司', note: '24 小時營業，鮪魚中腹大腹 CP 值高', rating: 4.0, placeId: null },
+      { name: '麺屋武蔵 新宿本店', tag: '拉麵', note: '新宿拉麵代表店，沾麵大盛免費加量', rating: 4.1, placeId: null },
+      { name: '京はやしや 新宿高島屋店', tag: '高島屋 13F・抹茶甜點', note: '宇治抹茶老舖，抹茶聖代和刨冰必點', rating: 3.9, placeId: null },
+      { name: '新宿高野本店', tag: '水果甜點', note: '百年水果專門店，哈密瓜聖代是招牌', rating: 4.1, placeId: null },
+    ],
+    shops: [
+      { name: 'ビックカメラ 新宿東口店', tag: 'Bic Camera・電器', note: '東口出站就到，遊戲主機、相機、藥妝都有' },
+      { name: '紀伊國屋書店 新宿本店', tag: '書店', note: '老字號大型書店，漫畫、畫冊、文具' },
+      { name: 'アニメイト新宿', tag: 'Animate・動漫周邊', note: '東口徒步圈，回飯店前最後補動漫周邊' },
+      { name: 'ドン・キホーテ 新宿東南口店', tag: '唐吉訶德・藥妝雜貨', note: '24 小時營業，伴手禮最後衝刺，記得帶護照退稅' },
     ],
     tips: [
       'Don Quijote 新宿店 24 小時營業，最後一晚買伴手禮／藥妝很方便，記得帶護照退稅',
       '高島屋 Times Square 就在車站旁，逛街、晚餐、回飯店動線一次搞定',
+      '想買任天堂／寶可夢官方商品：Nintendo TOKYO 和 Pokémon Center 澀谷店都在澀谷 PARCO 6F，從新宿搭山手線兩站就到',
     ],
   },
 };
@@ -217,6 +257,38 @@ function EventRow({ ev, isLast, onAreaClick, index }) {
   );
 }
 
+const CARD_STAGGER_BASE_MS = 150;
+const CARD_STAGGER_STEP_MS = 50;
+const CARD_STAGGER_MAX_STEPS = 8;
+
+const cardDelay = (i) => CARD_STAGGER_BASE_MS + Math.min(i, CARD_STAGGER_MAX_STEPS) * CARD_STAGGER_STEP_MS;
+
+function PlaceCard({ place, delay }) {
+  return (
+    <a
+      href={mapLink(place)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-start justify-between gap-3 p-3 rounded-xl bg-stone-50 hover:bg-stone-100 hover:shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2"
+      style={{ animation: `fadeUp 0.35s ease-out ${delay}ms both` }}
+    >
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-medium text-stone-800 text-sm">{place.name}</span>
+          {place.rating && (
+            <span className="text-xs text-amber-600 flex items-center gap-0.5 flex-shrink-0">
+              <Star size={10} fill="currentColor" />{place.rating}
+            </span>
+          )}
+        </div>
+        <div className="text-xs text-stone-400 mt-0.5">{place.tag}</div>
+        <div className="text-xs text-stone-500 mt-1">{place.note}</div>
+      </div>
+      <MapPin size={16} className="text-stone-300 mt-1 flex-shrink-0" />
+    </a>
+  );
+}
+
 function AreaModal({ area, onClose }) {
   const [show, setShow] = useState(false);
 
@@ -250,7 +322,7 @@ function AreaModal({ area, onClose }) {
           transform: show ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.97)',
         }}
       >
-        <div className="sticky top-0 px-6 pt-6 pb-5 rounded-t-3xl" style={{ backgroundColor: area.color }}>
+        <div className="sticky top-0 z-10 px-6 pt-6 pb-5 rounded-t-3xl" style={{ backgroundColor: area.color }}>
           <button
             onClick={handleClose}
             aria-label="關閉"
@@ -269,31 +341,21 @@ function AreaModal({ area, onClose }) {
             <h4 className="text-xs tracking-widest text-stone-400 mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>FOOD・沿線美食</h4>
             <div className="space-y-2.5">
               {area.food.map((f, i) => (
-                <a
-                  key={i}
-                  href={mapLink(f)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-start justify-between gap-3 p-3 rounded-xl bg-stone-50 hover:bg-stone-100 hover:shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2"
-                  style={{ animation: `fadeUp 0.35s ease-out ${150 + i * 50}ms both` }}
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-stone-800 text-sm">{f.name}</span>
-                      {f.rating && (
-                        <span className="text-xs text-amber-600 flex items-center gap-0.5 flex-shrink-0">
-                          <Star size={10} fill="currentColor" />{f.rating}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-xs text-stone-400 mt-0.5">{f.tag}</div>
-                    <div className="text-xs text-stone-500 mt-1">{f.note}</div>
-                  </div>
-                  <MapPin size={16} className="text-stone-300 mt-1 flex-shrink-0" />
-                </a>
+                <PlaceCard key={i} place={f} delay={cardDelay(i)} />
               ))}
             </div>
           </div>
+
+          {area.shops && (
+            <div className="mb-6">
+              <h4 className="text-xs tracking-widest text-stone-400 mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SHOP・逛街購物</h4>
+              <div className="space-y-2.5">
+                {area.shops.map((s, i) => (
+                  <PlaceCard key={i} place={s} delay={cardDelay(i)} />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <h4 className="text-xs tracking-widest text-stone-400 mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>TIPS・小提醒</h4>

@@ -6,7 +6,7 @@ import {
   MapPin, X, Star, Map as MapIcon, List
 } from 'lucide-react';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 /* ---------------------------------------------------------
@@ -18,12 +18,12 @@ const AREAS = {
     key: 'bay', name: '東京灣・舞浜', short: '東京灣', color: '#1C7C8C', tint: '#E3F1F2',
     intro: '兩大迪士尼樂園跟飯店群都在舞浜車站周邊，園區外的 Ikspiari 是覓食、看電影、最後補貨的地方。',
     food: [
-      { name: 'Monsoon Cafe', tag: 'Ikspiari 3F・泰越料理', note: '營業到 22:30，玩晚了也不怕餓肚子', rating: 4.3, placeId: 'ChIJyyO31hF9GGARhpUMZWBDxNQ' },
-      { name: 'Rainforest Cafe', tag: 'Ikspiari 2F・美式主題餐廳', note: '叢林造景很有氣氛，適合放鬆拍照', rating: 4.0, placeId: 'ChIJyyO31hF9GGARyQTJU6OkWeo' },
-      { name: 'Ikspiari Kitchen', tag: '美食街', note: '選擇多、出餐快，趕行程時的好選擇', rating: 3.4, placeId: 'ChIJPYu2AiZ9GGARKpMXFATtZmE' },
-      { name: 'Cape Cod Cook-Off', tag: '迪士尼海洋・美式漢堡', note: '園內人氣速食，看秀配漢堡', rating: 4.1, placeId: null },
-      { name: 'Restaurant Sakura', tag: '東京迪士尼海洋・和食', note: '園內少見的正餐選項，天婦羅定食不錯', rating: 4.0, placeId: null },
-      { name: '築地玉寿司 イクスピアリ店', tag: 'Ikspiari 4F・壽司', note: '築地起家的老字號，玩完樂園想吃壽司就靠它', rating: 4.0, placeId: null },
+      { name: 'Monsoon Cafe', tag: 'Ikspiari 3F・泰越料理', note: '營業到 22:30，玩晚了也不怕餓肚子', rating: 4.3, placeId: 'ChIJyyO31hF9GGARhpUMZWBDxNQ', lat: 35.6360, lng: 139.8852 },
+      { name: 'Rainforest Cafe', tag: 'Ikspiari 2F・美式主題餐廳', note: '叢林造景很有氣氛，適合放鬆拍照', rating: 4.0, placeId: 'ChIJyyO31hF9GGARyQTJU6OkWeo', lat: 35.6354, lng: 139.8840 },
+      { name: 'Ikspiari Kitchen', tag: '美食街', note: '選擇多、出餐快，趕行程時的好選擇', rating: 3.4, placeId: 'ChIJPYu2AiZ9GGARKpMXFATtZmE', lat: 35.6363, lng: 139.8842 },
+      { name: 'Cape Cod Cook-Off', tag: '迪士尼海洋・美式漢堡', note: '園內人氣速食，看秀配漢堡', rating: 4.1, placeId: null, lat: 35.6255, lng: 139.8862 },
+      { name: 'Restaurant Sakura', tag: '東京迪士尼海洋・和食', note: '園內少見的正餐選項，天婦羅定食不錯', rating: 4.0, placeId: null, lat: 35.6252, lng: 139.8834 },
+      { name: '築地玉寿司 イクスピアリ店', tag: 'Ikspiari 4F・壽司', note: '築地起家的老字號，玩完樂園想吃壽司就靠它', rating: 4.0, placeId: null, lat: 35.6351, lng: 139.8850 },
     ],
     shops: [
       { name: 'Bon Voyage', tag: '舞浜站旁・迪士尼官方商店', note: '園區外最大的迪士尼商品店，來不及在園內買的紀念品這裡補' },
@@ -40,13 +40,13 @@ const AREAS = {
     intro: 'Grand Nikko 所在的台場，跟 teamLab Planets 所在的豐洲，一條百合海鷗號就能串起來，沿路都是東京灣海景。',
     food: [
       { name: 'LaLaport Toyosu', tag: 'teamLab 步行 5 分鐘', note: '海濱商場，餐廳選擇最多，逛累了直接吃', rating: 3.9, placeId: 'ChIJRZuDqpiJGGARCb20R0epFcI' },
-      { name: 'Monsoon Cafe', tag: 'Aqua City 4F・泰越料理', note: '東京灣景觀，晚餐氣氛很好', rating: 4.3, placeId: 'ChIJL8dbO_aJGGARpzmnVUUI4n4' },
-      { name: 'YORIMICHI ODAIBA', tag: 'Aqua City・創作和食', note: '正對彩虹大橋，招牌布丁別錯過', rating: 4.0, placeId: 'ChIJqZfFV9GJGGARJG-2zHeyUdc' },
-      { name: 'Sizzler', tag: 'Aqua City・牛排沙拉吧', note: '吃到飽沙拉吧＋海景，份量實在', rating: 4.1, placeId: 'ChIJ819zO_aJGGARsmspYwftPuw' },
-      { name: 'bills お台場', tag: 'Decks 3F・早午餐', note: '鬆餅名店，早午餐首選', rating: 4.2, placeId: null },
-      { name: '築地寿司清', tag: 'Aqua City・壽司', note: '平價壽司，不用跑築地也吃得到', rating: 3.8, placeId: null },
-      { name: '東京ラーメン国技館 舞', tag: 'Aqua City 5F・拉麵主題館', note: '六家人氣拉麵店同場競技，配東京灣海景吃麵', rating: 3.8, placeId: null },
-      { name: 'KUA`AINA アクアシティお台場店', tag: 'Aqua City 4F・夏威夷漢堡', note: '夏威夷來的酪梨漢堡名店，份量十足', rating: 4.0, placeId: null },
+      { name: 'Monsoon Cafe', tag: 'Aqua City 4F・泰越料理', note: '東京灣景觀，晚餐氣氛很好', rating: 4.3, placeId: 'ChIJL8dbO_aJGGARpzmnVUUI4n4', lat: 35.6292, lng: 139.7733 },
+      { name: 'YORIMICHI ODAIBA', tag: 'Aqua City・創作和食', note: '正對彩虹大橋，招牌布丁別錯過', rating: 4.0, placeId: 'ChIJqZfFV9GJGGARJG-2zHeyUdc', lat: 35.6288, lng: 139.7729 },
+      { name: 'Sizzler', tag: 'Aqua City・牛排沙拉吧', note: '吃到飽沙拉吧＋海景，份量實在', rating: 4.1, placeId: 'ChIJ819zO_aJGGARsmspYwftPuw', lat: 35.6294, lng: 139.7741 },
+      { name: 'bills お台場', tag: 'Decks 3F・早午餐', note: '鬆餅名店，早午餐首選', rating: 4.2, placeId: null, lat: 35.6297, lng: 139.7752 },
+      { name: '築地寿司清', tag: 'Aqua City・壽司', note: '平價壽司，不用跑築地也吃得到', rating: 3.8, placeId: null, lat: 35.6286, lng: 139.7737 },
+      { name: '東京ラーメン国技館 舞', tag: 'Aqua City 5F・拉麵主題館', note: '六家人氣拉麵店同場競技，配東京灣海景吃麵', rating: 3.8, placeId: null, lat: 35.6291, lng: 139.7745 },
+      { name: 'KUA`AINA アクアシティお台場店', tag: 'Aqua City 4F・夏威夷漢堡', note: '夏威夷來的酪梨漢堡名店，份量十足', rating: 4.0, placeId: null, lat: 35.6287, lng: 139.7731 },
     ],
     shops: [
       { name: 'THE GUNDAM BASE TOKYO', tag: 'DiverCity 7F・鋼普拉', note: '鋼普拉旗艦店，本館要事前抽選，Annex 可以直接逛' },
@@ -63,13 +63,13 @@ const AREAS = {
     key: 'akiba', name: '秋葉原', short: '秋葉原', color: '#D9622B', tint: '#FBEBE2',
     intro: '動漫、公仔、扭蛋跟電器的集散地，室內店家密集，就算天氣熱也逛得舒服。',
     food: [
-      { name: 'Tsujita 沾麵', tag: '神田末広町・濃厚沾麵', note: '評價 4.9，秋葉原數一數二的沾麵', rating: 4.9, placeId: 'ChIJazjtQgCNGGARO606yF6kY7I' },
-      { name: 'Kyushu Jangara', tag: '豚骨拉麵', note: '位子小但出餐快，也有素食選項', rating: 4.4, placeId: 'ChIJ99Gizh2MGGARuDpsme65T9s' },
-      { name: 'Maidreamin 本店', tag: '女僕咖啡廳', note: '想體驗一次秋葉原限定文化的話', rating: 4.9, placeId: 'ChIJyR7AdR6MGGAROowxIYdMsj0' },
-      { name: '牛かつ もと村 秋葉原店', tag: '炸牛排定食', note: '石板自烤炸牛排，外酥內嫩', rating: 4.5, placeId: null },
-      { name: 'CoCo壱番屋 秋葉原駅前店', tag: '咖哩飯', note: '快速方便，客製化辣度和配料', rating: 4.0, placeId: null },
-      { name: 'とんかつ 丸五', tag: '炸豬排', note: '秋葉原豬排名店，厚切里肌外酥內嫩，開店前就開始排', rating: 4.4, placeId: null },
-      { name: '牛丼専門サンボ', tag: '牛丼', note: '秋葉原傳說級牛丼，便宜大碗、翻桌超快', rating: 4.2, placeId: null },
+      { name: 'Tsujita 沾麵', tag: '神田末広町・濃厚沾麵', note: '評價 4.9，秋葉原數一數二的沾麵', rating: 4.9, placeId: 'ChIJazjtQgCNGGARO606yF6kY7I', lat: 35.7027, lng: 139.7719 },
+      { name: 'Kyushu Jangara', tag: '豚骨拉麵', note: '位子小但出餐快，也有素食選項', rating: 4.4, placeId: 'ChIJ99Gizh2MGGARuDpsme65T9s', lat: 35.7010, lng: 139.7720 },
+      { name: 'Maidreamin 本店', tag: '女僕咖啡廳', note: '想體驗一次秋葉原限定文化的話', rating: 4.9, placeId: 'ChIJyR7AdR6MGGAROowxIYdMsj0', lat: 35.6999, lng: 139.7705 },
+      { name: '牛かつ もと村 秋葉原店', tag: '炸牛排定食', note: '石板自烤炸牛排，外酥內嫩', rating: 4.5, placeId: null, lat: 35.6980, lng: 139.7718 },
+      { name: 'CoCo壱番屋 秋葉原駅前店', tag: '咖哩飯', note: '快速方便，客製化辣度和配料', rating: 4.0, placeId: null, lat: 35.6987, lng: 139.7738 },
+      { name: 'とんかつ 丸五', tag: '炸豬排', note: '秋葉原豬排名店，厚切里肌外酥內嫩，開店前就開始排', rating: 4.4, placeId: null, lat: 35.6992, lng: 139.7713 },
+      { name: '牛丼専門サンボ', tag: '牛丼', note: '秋葉原傳說級牛丼，便宜大碗、翻桌超快', rating: 4.2, placeId: null, lat: 35.7002, lng: 139.7699 },
     ],
     shops: [
       { name: 'アニメイト秋葉原本館', tag: 'Animate・動漫周邊', note: '漫畫、BD、角色周邊最齊全的旗艦店' },
@@ -93,18 +93,18 @@ const AREAS = {
     key: 'shinjuku', name: '新宿', short: '新宿', color: '#33406B', tint: '#E7E9F0',
     intro: '從秋葉原跳一班車就到，百貨公司跟居酒屋巷弄並存，適合當一天的收尾。',
     food: [
-      { name: '今半', tag: '高島屋 14F・壽喜燒', note: '逛完百貨不用再移動，直接吃晚餐', rating: null, placeId: 'ChIJMxx7bsWMGGARdrUfch90sVw' },
-      { name: '思い出橫丁', tag: 'Omoide Yokocho・串燒小巷', note: '昭和氛圍的窄巷，跟白天的新宿很不一樣', rating: 4.2, placeId: 'ChIJP9eKBdeMGGAR0zzBXJNVj5A' },
-      { name: '伊勢丹新宿', tag: '地下美食街', note: '熟食、甜點、伴手禮一次逛完', rating: null, placeId: null },
-      { name: '風雲児 新宿', tag: '代代木・沾麵', note: '新宿站南口排隊名店，魚介濃厚湯底', rating: 4.6, placeId: null },
-      { name: '磯丸水産 新宿東口店', tag: '海鮮居酒屋', note: '24 小時營業，桌上自烤海鮮', rating: 3.9, placeId: null },
-      { name: '六歌仙', tag: '西新宿・和牛燒肉', note: '和牛燒肉＋涮涮鍋吃到飽，熱門時段建議先訂位', rating: 4.3, placeId: null },
-      { name: '名代とんかつ かつくら 新宿高島屋店', tag: '高島屋 14F・炸豬排', note: '京都來的豬排名店，現磨芝麻沾醬很講究', rating: 4.1, placeId: null },
-      { name: 'うなぎ 登亭 新宿店', tag: '鰻魚飯', note: '老字號平價鰻魚飯，鰻重不用排大隊也吃得到', rating: 4.0, placeId: null },
-      { name: 'すしざんまい 新宿東口店', tag: '壽司', note: '24 小時營業，鮪魚中腹大腹 CP 值高', rating: 4.0, placeId: null },
-      { name: '麺屋武蔵 新宿本店', tag: '拉麵', note: '新宿拉麵代表店，沾麵大盛免費加量', rating: 4.1, placeId: null },
-      { name: '京はやしや 新宿高島屋店', tag: '高島屋 13F・抹茶甜點', note: '宇治抹茶老舖，抹茶聖代和刨冰必點', rating: 3.9, placeId: null },
-      { name: '新宿高野本店', tag: '水果甜點', note: '百年水果專門店，哈密瓜聖代是招牌', rating: 4.1, placeId: null },
+      { name: '今半', tag: '高島屋 14F・壽喜燒', note: '逛完百貨不用再移動，直接吃晚餐', rating: null, placeId: 'ChIJMxx7bsWMGGARdrUfch90sVw', lat: 35.6873, lng: 139.7028 },
+      { name: '思い出橫丁', tag: 'Omoide Yokocho・串燒小巷', note: '昭和氛圍的窄巷，跟白天的新宿很不一樣', rating: 4.2, placeId: 'ChIJP9eKBdeMGGAR0zzBXJNVj5A', lat: 35.6934, lng: 139.6996 },
+      { name: '伊勢丹新宿', tag: '地下美食街', note: '熟食、甜點、伴手禮一次逛完', rating: null, placeId: null, lat: 35.6917, lng: 139.7046 },
+      { name: '風雲児 新宿', tag: '代代木・沾麵', note: '新宿站南口排隊名店，魚介濃厚湯底', rating: 4.6, placeId: null, lat: 35.6853, lng: 139.6995 },
+      { name: '磯丸水産 新宿東口店', tag: '海鮮居酒屋', note: '24 小時營業，桌上自烤海鮮', rating: 3.9, placeId: null, lat: 35.6938, lng: 139.7015 },
+      { name: '六歌仙', tag: '西新宿・和牛燒肉', note: '和牛燒肉＋涮涮鍋吃到飽，熱門時段建議先訂位', rating: 4.3, placeId: null, lat: 35.6938, lng: 139.6975 },
+      { name: '名代とんかつ かつくら 新宿高島屋店', tag: '高島屋 14F・炸豬排', note: '京都來的豬排名店，現磨芝麻沾醬很講究', rating: 4.1, placeId: null, lat: 35.6877, lng: 139.7022 },
+      { name: 'うなぎ 登亭 新宿店', tag: '鰻魚飯', note: '老字號平價鰻魚飯，鰻重不用排大隊也吃得到', rating: 4.0, placeId: null, lat: 35.6910, lng: 139.7040 },
+      { name: 'すしざんまい 新宿東口店', tag: '壽司', note: '24 小時營業，鮪魚中腹大腹 CP 值高', rating: 4.0, placeId: null, lat: 35.6931, lng: 139.7030 },
+      { name: '麺屋武蔵 新宿本店', tag: '拉麵', note: '新宿拉麵代表店，沾麵大盛免費加量', rating: 4.1, placeId: null, lat: 35.6950, lng: 139.6995 },
+      { name: '京はやしや 新宿高島屋店', tag: '高島屋 13F・抹茶甜點', note: '宇治抹茶老舖，抹茶聖代和刨冰必點', rating: 3.9, placeId: null, lat: 35.6871, lng: 139.7024 },
+      { name: '新宿高野本店', tag: '水果甜點', note: '百年水果專門店，哈密瓜聖代是招牌', rating: 4.1, placeId: null, lat: 35.6913, lng: 139.7014 },
     ],
     shops: [
       { name: 'ビックカメラ 新宿東口店', tag: 'Bic Camera・電器', note: '東口出站就到，遊戲主機、相機、藥妝都有' },
@@ -181,58 +181,66 @@ const mapLink = (f) => {
 };
 
 /* ---------------------------------------------------------
-   MAP DATA — POIs and major transit stations (approx coords)
+   MAP DATA — POIs, restaurants, and transit (approx coords)
 --------------------------------------------------------- */
 
 const AIRPORT_COLOR = '#1C1F26';
 
+const PLACE_TYPES = [
+  { key: 'sight', label: '景點', icon: Sparkles },
+  { key: 'hotel', label: '住宿', icon: Hotel },
+  { key: 'food', label: '美食', icon: Utensils },
+  { key: 'shopping', label: '購物', icon: ShoppingBag },
+  { key: 'transit', label: '交通', icon: Train },
+];
+
 const MAP_POIS = [
-  { name: '東京迪士尼樂園', tag: '主題樂園・Day 2', areaKey: 'bay', icon: Castle, lat: 35.6329, lng: 139.8804 },
-  { name: '東京迪士尼海洋', tag: '主題樂園・Day 1', areaKey: 'bay', icon: Ship, lat: 35.6267, lng: 139.8850 },
-  { name: 'Hilton Tokyo Bay', tag: '住宿・Day 1-2', areaKey: 'bay', icon: Hotel, lat: 35.6273, lng: 139.8907 },
-  { name: 'Ikspiari', tag: '購物・美食', areaKey: 'bay', icon: ShoppingBag, lat: 35.6357, lng: 139.8846 },
-  { name: 'グランドニッコー東京 台場', tag: '住宿・Day 3-4', areaKey: 'daiba', icon: Hotel, lat: 35.6242, lng: 139.7752 },
-  { name: 'teamLab Planets TOKYO', tag: '數位藝術・Day 3', areaKey: 'daiba', icon: Sparkles, lat: 35.6491, lng: 139.7897 },
-  { name: 'ららぽーと豊洲', tag: '購物中心', areaKey: 'daiba', icon: ShoppingBag, lat: 35.6553, lng: 139.7926 },
-  { name: 'DiverCity Tokyo Plaza', tag: '獨角獸鋼彈・購物', areaKey: 'daiba', icon: ShoppingBag, lat: 35.6249, lng: 139.7756 },
-  { name: 'アクアシティお台場', tag: '購物・美食・彩虹大橋景', areaKey: 'daiba', icon: Utensils, lat: 35.6290, lng: 139.7737 },
-  { name: '秋葉原電気街', tag: '動漫・扭蛋・電器・Day 4', areaKey: 'akiba', icon: Gift, lat: 35.7005, lng: 139.7712 },
-  { name: '高島屋タイムズスクエア', tag: '百貨・晚餐・Day 4', areaKey: 'shinjuku', icon: Building2, lat: 35.6875, lng: 139.7025 },
-  { name: '思い出橫丁', tag: '居酒屋小巷', areaKey: 'shinjuku', icon: Utensils, lat: 35.6934, lng: 139.6996 },
-  { name: '羽田機場 第3航廈', tag: '國際線・Day 1 / Day 5', areaKey: null, icon: PlaneTakeoff, lat: 35.5447, lng: 139.7676 },
+  { name: '東京迪士尼樂園', tag: '主題樂園・Day 2', areaKey: 'bay', type: 'sight', icon: Castle, lat: 35.6329, lng: 139.8804 },
+  { name: '東京迪士尼海洋', tag: '主題樂園・Day 1', areaKey: 'bay', type: 'sight', icon: Ship, lat: 35.6267, lng: 139.8850 },
+  { name: 'Hilton Tokyo Bay', tag: '住宿・Day 1-2', areaKey: 'bay', type: 'hotel', icon: Hotel, lat: 35.6273, lng: 139.8907 },
+  { name: 'Ikspiari', tag: '購物・美食', areaKey: 'bay', type: 'shopping', icon: ShoppingBag, lat: 35.6357, lng: 139.8846 },
+  { name: 'グランドニッコー東京 台場', tag: '住宿・Day 3-4', areaKey: 'daiba', type: 'hotel', icon: Hotel, lat: 35.6242, lng: 139.7752 },
+  { name: 'teamLab Planets TOKYO', tag: '數位藝術・Day 3', areaKey: 'daiba', type: 'sight', icon: Sparkles, lat: 35.6491, lng: 139.7897 },
+  { name: 'ららぽーと豊洲', tag: '購物中心・美食街', areaKey: 'daiba', type: 'shopping', icon: ShoppingBag, lat: 35.6553, lng: 139.7926 },
+  { name: 'DiverCity Tokyo Plaza', tag: '獨角獸鋼彈・購物', areaKey: 'daiba', type: 'shopping', icon: ShoppingBag, lat: 35.6249, lng: 139.7756 },
+  { name: 'アクアシティお台場', tag: '購物・美食・彩虹大橋景', areaKey: 'daiba', type: 'shopping', icon: ShoppingBag, lat: 35.6290, lng: 139.7737 },
+  { name: '秋葉原電気街', tag: '動漫・扭蛋・電器・Day 4', areaKey: 'akiba', type: 'shopping', icon: Gift, lat: 35.7005, lng: 139.7712 },
+  { name: '高島屋タイムズスクエア', tag: '百貨・晚餐・Day 4', areaKey: 'shinjuku', type: 'shopping', icon: Building2, lat: 35.6875, lng: 139.7025 },
+  { name: '羽田機場 第3航廈', tag: '國際線・Day 1 / Day 5', areaKey: null, type: 'transit', icon: PlaneTakeoff, lat: 35.5447, lng: 139.7676 },
 ];
 
 const MAP_STATIONS = [
-  { name: '舞浜駅', line: 'JR 京葉線・迪士尼門戶', lat: 35.6363, lng: 139.8836 },
-  { name: '東京駅', line: 'JR 各線轉乘樞紐', lat: 35.6812, lng: 139.7671 },
-  { name: '新橋駅', line: 'JR・百合海鷗號起點', lat: 35.6663, lng: 139.7583 },
-  { name: '台場駅', line: '百合海鷗號・飯店最近站', lat: 35.6266, lng: 139.7740 },
-  { name: '東京テレポート駅', line: '臨海線', lat: 35.6276, lng: 139.7793 },
-  { name: '新豊洲駅', line: '百合海鷗號・teamLab 最近站', lat: 35.6444, lng: 139.7907 },
-  { name: '豊洲駅', line: '有楽町線・百合海鷗號', lat: 35.6547, lng: 139.7957 },
-  { name: '秋葉原駅', line: 'JR 山手線・日比谷線', lat: 35.6984, lng: 139.7731 },
-  { name: '新宿駅', line: 'JR 山手線・中央線', lat: 35.6896, lng: 139.7006 },
+  { name: '舞浜駅', line: 'JR 京葉線・迪士尼門戶', areaKey: 'bay', lat: 35.6363, lng: 139.8836 },
+  { name: '東京駅', line: 'JR 各線轉乘樞紐', areaKey: null, lat: 35.6812, lng: 139.7671 },
+  { name: '新橋駅', line: 'JR・百合海鷗號起點', areaKey: null, lat: 35.6663, lng: 139.7583 },
+  { name: '台場駅', line: '百合海鷗號・飯店最近站', areaKey: 'daiba', lat: 35.6266, lng: 139.7740 },
+  { name: '東京テレポート駅', line: '臨海線', areaKey: 'daiba', lat: 35.6276, lng: 139.7793 },
+  { name: '新豊洲駅', line: '百合海鷗號・teamLab 最近站', areaKey: 'daiba', lat: 35.6444, lng: 139.7907 },
+  { name: '豊洲駅', line: '有楽町線・百合海鷗號', areaKey: 'daiba', lat: 35.6547, lng: 139.7957 },
+  { name: '秋葉原駅', line: 'JR 山手線・日比谷線', areaKey: 'akiba', lat: 35.6984, lng: 139.7731 },
+  { name: '新宿駅', line: 'JR 山手線・中央線', areaKey: 'shinjuku', lat: 35.6896, lng: 139.7006 },
 ];
 
 const POI_MARKER_PX = 32;
+const FOOD_MARKER_PX = 25;
 const STATION_MARKER_PX = 20;
 
-const makePoiIcon = (color, IconComp) =>
+const makeMarkerIcon = (color, IconComp, sizePx) =>
   L.divIcon({
     className: '',
     html: renderToStaticMarkup(
       <div style={{
-        width: POI_MARKER_PX, height: POI_MARKER_PX, backgroundColor: color,
-        borderRadius: '9999px', border: '2.5px solid #FFFFFF',
+        width: sizePx, height: sizePx, backgroundColor: color,
+        borderRadius: '9999px', border: '2px solid #FFFFFF',
         boxShadow: '0 2px 8px rgba(28,31,38,0.35)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <IconComp size={16} color="#FFFFFF" />
+        <IconComp size={Math.round(sizePx * 0.5)} color="#FFFFFF" />
       </div>
     ),
-    iconSize: [POI_MARKER_PX, POI_MARKER_PX],
-    iconAnchor: [POI_MARKER_PX / 2, POI_MARKER_PX / 2],
-    popupAnchor: [0, -POI_MARKER_PX / 2 - 2],
+    iconSize: [sizePx, sizePx],
+    iconAnchor: [sizePx / 2, sizePx / 2],
+    popupAnchor: [0, -sizePx / 2 - 2],
   });
 
 const STATION_ICON = L.divIcon({
@@ -252,10 +260,37 @@ const STATION_ICON = L.divIcon({
   popupAnchor: [0, -STATION_MARKER_PX / 2 - 2],
 });
 
-const POI_MARKERS = MAP_POIS.map((p) => ({
-  ...p,
-  markerIcon: makePoiIcon(p.areaKey ? AREAS[p.areaKey].color : AIRPORT_COLOR, p.icon),
-}));
+const FOOD_ICONS = Object.fromEntries(
+  Object.values(AREAS).map((a) => [a.key, makeMarkerIcon(a.color, Utensils, FOOD_MARKER_PX)])
+);
+
+const ALL_MARKERS = [
+  ...MAP_POIS.map((p) => ({
+    ...p,
+    href: placeSearchLink(p.name),
+    markerIcon: makeMarkerIcon(p.areaKey ? AREAS[p.areaKey].color : AIRPORT_COLOR, p.icon, POI_MARKER_PX),
+  })),
+  ...Object.values(AREAS).flatMap((a) =>
+    a.food.filter((f) => f.lat != null).map((f) => ({
+      name: f.name, tag: f.tag, rating: f.rating, areaKey: a.key, type: 'food',
+      lat: f.lat, lng: f.lng, href: mapLink(f), markerIcon: FOOD_ICONS[a.key],
+    }))
+  ),
+  ...MAP_STATIONS.map((s) => ({
+    name: s.name, tag: s.line, areaKey: s.areaKey, type: 'transit',
+    lat: s.lat, lng: s.lng, href: placeSearchLink(s.name), markerIcon: STATION_ICON,
+  })),
+];
+
+const REGION_FILTERS = [
+  { key: 'all', label: '全部區域' },
+  ...Object.values(AREAS).map((a) => ({ key: a.key, label: a.short, color: a.color, dot: a.color })),
+];
+
+const TYPE_FILTERS = [
+  { key: 'all', label: '全部類型' },
+  ...PLACE_TYPES,
+];
 
 /* ---------------------------------------------------------
    SUBCOMPONENTS
@@ -467,13 +502,20 @@ function AreaModal({ area, onClose }) {
   );
 }
 
-function MarkerPopupContent({ title, subtitle, query }) {
+function MarkerPopupContent({ title, subtitle, rating, href }) {
   return (
     <div style={{ fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif", minWidth: '150px' }}>
-      <div className="text-sm font-bold text-stone-800">{title}</div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-bold text-stone-800">{title}</span>
+        {rating && (
+          <span className="text-xs text-amber-600 flex items-center gap-0.5 flex-shrink-0">
+            <Star size={10} fill="currentColor" />{rating}
+          </span>
+        )}
+      </div>
       <div className="text-xs text-stone-500 mt-0.5">{subtitle}</div>
       <a
-        href={placeSearchLink(query)}
+        href={href}
         target="_blank"
         rel="noopener noreferrer"
         className="text-xs font-medium inline-block mt-1.5"
@@ -485,55 +527,87 @@ function MarkerPopupContent({ title, subtitle, query }) {
   );
 }
 
+function FilterChips({ options, value, onChange }) {
+  return (
+    <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+      {options.map((o) => {
+        const isActive = value === o.key;
+        return (
+          <button
+            key={o.key}
+            onClick={() => onChange(o.key)}
+            className={`flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 ${
+              isActive ? 'text-white' : 'bg-white text-stone-600 hover:bg-stone-50'
+            }`}
+            style={{ backgroundColor: isActive ? (o.color || '#1C1F26') : undefined }}
+          >
+            {o.icon && <o.icon size={12} />}
+            {o.dot && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: isActive ? '#FFFFFF' : o.dot }} />}
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FitToMarkers({ markers, filterKey }) {
+  const map = useMap();
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (!markers.length) return;
+    const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng])).pad(0.15);
+    map.flyToBounds(bounds, { duration: 0.7, maxZoom: 15 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
+
+  return null;
+}
+
 function MapView() {
+  const [region, setRegion] = useState('all');
+  const [placeType, setPlaceType] = useState('all');
+
   const bounds = useMemo(
-    () => L.latLngBounds([...MAP_POIS, ...MAP_STATIONS].map((p) => [p.lat, p.lng])).pad(0.06),
+    () => L.latLngBounds(ALL_MARKERS.map((p) => [p.lat, p.lng])).pad(0.06),
     []
+  );
+
+  const visibleMarkers = ALL_MARKERS.filter((m) =>
+    (region === 'all' || m.areaKey === region) &&
+    (placeType === 'all' || m.type === placeType)
   );
 
   return (
     <div className="px-5 pt-4 pb-24" style={{ animation: 'fadeUp 0.4s ease-out both' }}>
-      <div className="rounded-2xl overflow-hidden shadow-md relative isolate" style={{ height: '58vh', minHeight: '420px' }}>
+      <div className="space-y-2 mb-3">
+        <FilterChips options={REGION_FILTERS} value={region} onChange={setRegion} />
+        <FilterChips options={TYPE_FILTERS} value={placeType} onChange={setPlaceType} />
+      </div>
+
+      <div className="rounded-2xl overflow-hidden shadow-md relative isolate" style={{ height: '54vh', minHeight: '400px' }}>
         <MapContainer bounds={bounds} scrollWheelZoom style={{ width: '100%', height: '100%' }}>
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
             subdomains="abcd"
           />
-          {POI_MARKERS.map((p) => (
-            <Marker key={p.name} position={[p.lat, p.lng]} icon={p.markerIcon}>
+          <FitToMarkers markers={visibleMarkers} filterKey={`${region}-${placeType}`} />
+          {visibleMarkers.map((m) => (
+            <Marker key={`${m.areaKey}-${m.name}`} position={[m.lat, m.lng]} icon={m.markerIcon}>
               <Popup>
-                <MarkerPopupContent title={p.name} subtitle={p.tag} query={p.name} />
-              </Popup>
-            </Marker>
-          ))}
-          {MAP_STATIONS.map((s) => (
-            <Marker key={s.name} position={[s.lat, s.lng]} icon={STATION_ICON}>
-              <Popup>
-                <MarkerPopupContent title={s.name} subtitle={s.line} query={s.name} />
+                <MarkerPopupContent title={m.name} subtitle={m.tag} rating={m.rating} href={m.href} />
               </Popup>
             </Marker>
           ))}
         </MapContainer>
       </div>
 
-      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-4">
-        {Object.values(AREAS).map((a) => (
-          <div key={a.key} className="flex items-center gap-1.5 text-xs text-stone-500">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: a.color }} />
-            {a.short}
-          </div>
-        ))}
-        <div className="flex items-center gap-1.5 text-xs text-stone-500">
-          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: AIRPORT_COLOR }} />
-          機場
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-stone-500">
-          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-white border-2 border-stone-400" />
-          車站
-        </div>
-      </div>
-      <p className="text-xs text-stone-400 mt-2">點標記看地點資訊，再點「在 Google Maps 開啟」導航</p>
+      <p className="text-xs text-stone-400 mt-3">
+        顯示 {visibleMarkers.length} 個地點・點標記看資訊，再點「在 Google Maps 開啟」導航・餐廳位置為約略標示
+      </p>
     </div>
   );
 }

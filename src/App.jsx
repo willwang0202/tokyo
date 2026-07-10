@@ -125,7 +125,7 @@ const DAYS = [
   {
     id: 1, date: '08/19', weekday: '週三', areaKeys: ['bay'], title: '抵達東京・海洋日',
     events: [
-      { time: '09:00', icon: PlaneTakeoff, title: '中華航空 桃園 → 羽田', desc: '國際線建議提前 2.5 小時抵達機場', type: 'flight', maps: '桃園國際機場' },
+      { time: '09:00', icon: PlaneTakeoff, title: '中華航空 CI220 松山 → 羽田', desc: '國際線建議提前 2.5 小時抵達機場', type: 'flight', maps: '台北松山機場' },
       { time: '13:10', icon: PlaneLanding, title: '抵達羽田機場', desc: '入境審查＋提領行李，預留 40-60 分鐘', type: 'flight', maps: '羽田空港 第3ターミナル' },
       { time: '約 15:00', icon: Hotel, title: 'Hilton Tokyo Bay', desc: '先寄放行李，正式入住晚點再辦理', area: 'bay', maps: 'Hilton Tokyo Bay' },
       { time: '16:00', icon: Ship, title: '東京迪士尼海洋', desc: '開放到 21:00，夜間的威尼斯貢多拉很值得', area: 'bay', maps: '東京ディズニーシー' },
@@ -166,7 +166,7 @@ const DAYS = [
     events: [
       { time: '09:00', icon: Coffee, title: '台場周邊悠閒早晨', desc: '退房前最後採買，Aqua City／DiverCity 就在飯店旁', area: 'daiba', maps: 'アクアシティお台場' },
       { time: '11:00', icon: Luggage, title: '退房，前往羽田機場', desc: '車程約 30 分鐘', type: 'transit', maps: '羽田空港 第3ターミナル' },
-      { time: '14:30', icon: PlaneTakeoff, title: '羽田 → 桃園 起飛', desc: '國際線登機門常較早關閉，預留充裕時間', type: 'flight', maps: '羽田空港 第3ターミナル' },
+      { time: '14:30', icon: PlaneTakeoff, title: '中華航空 CI221 羽田 → 松山', desc: '國際線登機門常較早關閉，預留充裕時間', type: 'flight', maps: '羽田空港 第3ターミナル' },
     ],
   },
 ];
@@ -750,10 +750,10 @@ export default function TokyoTripPlanner() {
           {/* flight tags */}
           <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar">
             <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 text-white/80 text-xs whitespace-nowrap flex-shrink-0">
-              <PlaneTakeoff size={12} /> CI・桃園→羽田・09:00
+              <PlaneTakeoff size={12} /> CI220・松山→羽田・09:00
             </div>
             <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 text-white/80 text-xs whitespace-nowrap flex-shrink-0">
-              <PlaneLanding size={12} /> 羽田→桃園・14:30
+              <PlaneLanding size={12} /> CI221・羽田→松山・14:30
             </div>
           </div>
         </div>

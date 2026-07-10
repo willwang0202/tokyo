@@ -1,9 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import {
   PlaneTakeoff, PlaneLanding, Hotel, Luggage, Ship, Castle, Sparkles,
   ShoppingBag, Utensils, Gift, Zap, Train, Building2, Moon, Coffee,
-  MapPin, X, Star
+  MapPin, X, Star, Map as MapIcon, List
 } from 'lucide-react';
+import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 /* ---------------------------------------------------------
    DATA — grounded in real places (verified via Places search)
@@ -120,48 +124,48 @@ const DAYS = [
   {
     id: 1, date: '08/19', weekday: '週三', areaKeys: ['bay'], title: '抵達東京・海洋日',
     events: [
-      { time: '09:00', icon: PlaneTakeoff, title: '中華航空 桃園 → 羽田', desc: '國際線建議提前 2.5 小時抵達機場', type: 'flight' },
-      { time: '13:10', icon: PlaneLanding, title: '抵達羽田機場', desc: '入境審查＋提領行李，預留 40-60 分鐘', type: 'flight' },
-      { time: '約 15:00', icon: Hotel, title: 'Hilton Tokyo Bay', desc: '先寄放行李，正式入住晚點再辦理', area: 'bay' },
-      { time: '16:00', icon: Ship, title: '東京迪士尼海洋', desc: '開放到 21:00，夜間的威尼斯貢多拉很值得', area: 'bay' },
-      { time: '21:30', icon: Moon, title: '返回 Hilton Tokyo Bay', desc: '第一晚住宿', area: 'bay', showBadge: false },
+      { time: '09:00', icon: PlaneTakeoff, title: '中華航空 桃園 → 羽田', desc: '國際線建議提前 2.5 小時抵達機場', type: 'flight', maps: '桃園國際機場' },
+      { time: '13:10', icon: PlaneLanding, title: '抵達羽田機場', desc: '入境審查＋提領行李，預留 40-60 分鐘', type: 'flight', maps: '羽田空港 第3ターミナル' },
+      { time: '約 15:00', icon: Hotel, title: 'Hilton Tokyo Bay', desc: '先寄放行李，正式入住晚點再辦理', area: 'bay', maps: 'Hilton Tokyo Bay' },
+      { time: '16:00', icon: Ship, title: '東京迪士尼海洋', desc: '開放到 21:00，夜間的威尼斯貢多拉很值得', area: 'bay', maps: '東京ディズニーシー' },
+      { time: '21:30', icon: Moon, title: '返回 Hilton Tokyo Bay', desc: '第一晚住宿', area: 'bay', showBadge: false, maps: 'Hilton Tokyo Bay' },
     ],
   },
   {
     id: 2, date: '08/20', weekday: '週四', areaKeys: ['bay'], title: '迪士尼陸地全日',
     events: [
-      { time: '08:30', icon: Castle, title: '東京迪士尼樂園', desc: '全日暢玩，建議提早入園搶熱門設施', area: 'bay' },
-      { time: '21:00', icon: Moon, title: '返回 Hilton Tokyo Bay', desc: '第二晚住宿', area: 'bay', showBadge: false },
+      { time: '08:30', icon: Castle, title: '東京迪士尼樂園', desc: '全日暢玩，建議提早入園搶熱門設施', area: 'bay', maps: '東京ディズニーランド' },
+      { time: '21:00', icon: Moon, title: '返回 Hilton Tokyo Bay', desc: '第二晚住宿', area: 'bay', showBadge: false, maps: 'Hilton Tokyo Bay' },
     ],
   },
   {
     id: 3, date: '08/21', weekday: '週五', areaKeys: ['daiba'], title: '移師台場・數位藝術',
     events: [
-      { time: '11:00', icon: Luggage, title: '退房，前往台場', desc: '舞浜到台場車程約 40-50 分鐘', type: 'transit' },
-      { time: '約 12:30', icon: Hotel, title: 'Grand Nikko Tokyo Daiba', desc: '先寄放行李，不急著正式入住', area: 'daiba' },
-      { time: '14:00', icon: Sparkles, title: 'teamLab Planets TOKYO', desc: '豐洲館，赤腳涉水的沉浸式展覽', area: 'daiba' },
-      { time: '16:30', icon: ShoppingBag, title: 'LaLaport Toyosu', desc: '就在 teamLab 隔壁，海濱商場慢慢逛', area: 'daiba' },
-      { time: '19:00', icon: Utensils, title: '台場晚餐', desc: 'Aqua City／DiverCity，配彩虹大橋夜景', area: 'daiba', showBadge: false },
+      { time: '11:00', icon: Luggage, title: '退房，前往台場', desc: '舞浜到台場車程約 40-50 分鐘', type: 'transit', maps: '舞浜駅' },
+      { time: '約 12:30', icon: Hotel, title: 'Grand Nikko Tokyo Daiba', desc: '先寄放行李，不急著正式入住', area: 'daiba', maps: 'グランドニッコー東京 台場' },
+      { time: '14:00', icon: Sparkles, title: 'teamLab Planets TOKYO', desc: '豐洲館，赤腳涉水的沉浸式展覽', area: 'daiba', maps: 'teamLab Planets TOKYO' },
+      { time: '16:30', icon: ShoppingBag, title: 'LaLaport Toyosu', desc: '就在 teamLab 隔壁，海濱商場慢慢逛', area: 'daiba', maps: 'ららぽーと豊洲' },
+      { time: '19:00', icon: Utensils, title: '台場晚餐', desc: 'Aqua City／DiverCity，配彩虹大橋夜景', area: 'daiba', showBadge: false, maps: 'アクアシティお台場' },
     ],
   },
   {
     id: 4, date: '08/22', weekday: '週六', areaKeys: ['akiba', 'shinjuku'], title: '秋葉原尋寶・新宿收尾',
     events: [
-      { time: '10:00', icon: Gift, title: '秋葉原：扭蛋・動漫店', desc: '扭蛋會館、Mandarake、Animate 一次逛', area: 'akiba' },
+      { time: '10:00', icon: Gift, title: '秋葉原：扭蛋・動漫店', desc: '扭蛋會館、Mandarake、Animate 一次逛', area: 'akiba', maps: '秋葉原電気街' },
       { time: '12:30', icon: Utensils, title: '秋葉原午餐', desc: '拉麵一級戰區，排隊也值得', area: 'akiba', showBadge: false },
-      { time: '14:00', icon: Zap, title: 'Yodobashi Akiba', desc: '電器街，退稅、戰利品打包', area: 'akiba' },
-      { time: '15:30', icon: Train, title: '搭車前往新宿', desc: '約 15-20 分鐘直達', type: 'transit' },
-      { time: '16:00', icon: Building2, title: '新宿逛街', desc: '伊勢丹、Don Quijote，補伴手禮／藥妝', area: 'shinjuku' },
+      { time: '14:00', icon: Zap, title: 'Yodobashi Akiba', desc: '電器街，退稅、戰利品打包', area: 'akiba', maps: 'ヨドバシAkiba' },
+      { time: '15:30', icon: Train, title: '搭車前往新宿', desc: '約 15-20 分鐘直達', type: 'transit', maps: '新宿駅' },
+      { time: '16:00', icon: Building2, title: '新宿逛街', desc: '伊勢丹、Don Quijote，補伴手禮／藥妝', area: 'shinjuku', maps: '伊勢丹新宿店' },
       { time: '19:00', icon: Utensils, title: '新宿晚餐', desc: '今半壽喜燒，或思い出橫丁串燒', area: 'shinjuku', showBadge: false },
-      { time: '21:30', icon: Moon, title: '返回 Grand Nikko Tokyo Daiba', desc: '最後一晚住宿', area: 'daiba', showBadge: false },
+      { time: '21:30', icon: Moon, title: '返回 Grand Nikko Tokyo Daiba', desc: '最後一晚住宿', area: 'daiba', showBadge: false, maps: 'グランドニッコー東京 台場' },
     ],
   },
   {
     id: 5, date: '08/23', weekday: '週日', areaKeys: ['daiba'], title: '台場輕鬆早晨・賦歸',
     events: [
-      { time: '09:00', icon: Coffee, title: '台場周邊悠閒早晨', desc: '退房前最後採買，Aqua City／DiverCity 就在飯店旁', area: 'daiba' },
-      { time: '11:00', icon: Luggage, title: '退房，前往羽田機場', desc: '車程約 30 分鐘', type: 'transit' },
-      { time: '14:30', icon: PlaneTakeoff, title: '羽田 → 桃園 起飛', desc: '國際線登機門常較早關閉，預留充裕時間', type: 'flight' },
+      { time: '09:00', icon: Coffee, title: '台場周邊悠閒早晨', desc: '退房前最後採買，Aqua City／DiverCity 就在飯店旁', area: 'daiba', maps: 'アクアシティお台場' },
+      { time: '11:00', icon: Luggage, title: '退房，前往羽田機場', desc: '車程約 30 分鐘', type: 'transit', maps: '羽田空港 第3ターミナル' },
+      { time: '14:30', icon: PlaneTakeoff, title: '羽田 → 桃園 起飛', desc: '國際線登機門常較早關閉，預留充裕時間', type: 'flight', maps: '羽田空港 第3ターミナル' },
     ],
   },
 ];
@@ -169,12 +173,89 @@ const DAYS = [
 const NEUTRAL = '#A9A398';
 const NEUTRAL_TINT = '#EFEDE7';
 
+const placeSearchLink = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
 const mapLink = (f) => {
-  const query = encodeURIComponent(`${f.name} ${f.tag || ''}`.trim());
-  return f.placeId
-    ? `https://www.google.com/maps/search/?api=1&query=${query}&query_place_id=${f.placeId}`
-    : `https://www.google.com/maps/search/?api=1&query=${query}`;
+  const base = placeSearchLink(`${f.name} ${f.tag || ''}`.trim());
+  return f.placeId ? `${base}&query_place_id=${f.placeId}` : base;
 };
+
+/* ---------------------------------------------------------
+   MAP DATA — POIs and major transit stations (approx coords)
+--------------------------------------------------------- */
+
+const AIRPORT_COLOR = '#1C1F26';
+
+const MAP_POIS = [
+  { name: '東京迪士尼樂園', tag: '主題樂園・Day 2', areaKey: 'bay', icon: Castle, lat: 35.6329, lng: 139.8804 },
+  { name: '東京迪士尼海洋', tag: '主題樂園・Day 1', areaKey: 'bay', icon: Ship, lat: 35.6267, lng: 139.8850 },
+  { name: 'Hilton Tokyo Bay', tag: '住宿・Day 1-2', areaKey: 'bay', icon: Hotel, lat: 35.6273, lng: 139.8907 },
+  { name: 'Ikspiari', tag: '購物・美食', areaKey: 'bay', icon: ShoppingBag, lat: 35.6357, lng: 139.8846 },
+  { name: 'グランドニッコー東京 台場', tag: '住宿・Day 3-4', areaKey: 'daiba', icon: Hotel, lat: 35.6242, lng: 139.7752 },
+  { name: 'teamLab Planets TOKYO', tag: '數位藝術・Day 3', areaKey: 'daiba', icon: Sparkles, lat: 35.6491, lng: 139.7897 },
+  { name: 'ららぽーと豊洲', tag: '購物中心', areaKey: 'daiba', icon: ShoppingBag, lat: 35.6553, lng: 139.7926 },
+  { name: 'DiverCity Tokyo Plaza', tag: '獨角獸鋼彈・購物', areaKey: 'daiba', icon: ShoppingBag, lat: 35.6249, lng: 139.7756 },
+  { name: 'アクアシティお台場', tag: '購物・美食・彩虹大橋景', areaKey: 'daiba', icon: Utensils, lat: 35.6290, lng: 139.7737 },
+  { name: '秋葉原電気街', tag: '動漫・扭蛋・電器・Day 4', areaKey: 'akiba', icon: Gift, lat: 35.7005, lng: 139.7712 },
+  { name: '高島屋タイムズスクエア', tag: '百貨・晚餐・Day 4', areaKey: 'shinjuku', icon: Building2, lat: 35.6875, lng: 139.7025 },
+  { name: '思い出橫丁', tag: '居酒屋小巷', areaKey: 'shinjuku', icon: Utensils, lat: 35.6934, lng: 139.6996 },
+  { name: '羽田機場 第3航廈', tag: '國際線・Day 1 / Day 5', areaKey: null, icon: PlaneTakeoff, lat: 35.5447, lng: 139.7676 },
+];
+
+const MAP_STATIONS = [
+  { name: '舞浜駅', line: 'JR 京葉線・迪士尼門戶', lat: 35.6363, lng: 139.8836 },
+  { name: '東京駅', line: 'JR 各線轉乘樞紐', lat: 35.6812, lng: 139.7671 },
+  { name: '新橋駅', line: 'JR・百合海鷗號起點', lat: 35.6663, lng: 139.7583 },
+  { name: '台場駅', line: '百合海鷗號・飯店最近站', lat: 35.6266, lng: 139.7740 },
+  { name: '東京テレポート駅', line: '臨海線', lat: 35.6276, lng: 139.7793 },
+  { name: '新豊洲駅', line: '百合海鷗號・teamLab 最近站', lat: 35.6444, lng: 139.7907 },
+  { name: '豊洲駅', line: '有楽町線・百合海鷗號', lat: 35.6547, lng: 139.7957 },
+  { name: '秋葉原駅', line: 'JR 山手線・日比谷線', lat: 35.6984, lng: 139.7731 },
+  { name: '新宿駅', line: 'JR 山手線・中央線', lat: 35.6896, lng: 139.7006 },
+];
+
+const POI_MARKER_PX = 32;
+const STATION_MARKER_PX = 20;
+
+const makePoiIcon = (color, IconComp) =>
+  L.divIcon({
+    className: '',
+    html: renderToStaticMarkup(
+      <div style={{
+        width: POI_MARKER_PX, height: POI_MARKER_PX, backgroundColor: color,
+        borderRadius: '9999px', border: '2.5px solid #FFFFFF',
+        boxShadow: '0 2px 8px rgba(28,31,38,0.35)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <IconComp size={16} color="#FFFFFF" />
+      </div>
+    ),
+    iconSize: [POI_MARKER_PX, POI_MARKER_PX],
+    iconAnchor: [POI_MARKER_PX / 2, POI_MARKER_PX / 2],
+    popupAnchor: [0, -POI_MARKER_PX / 2 - 2],
+  });
+
+const STATION_ICON = L.divIcon({
+  className: '',
+  html: renderToStaticMarkup(
+    <div style={{
+      width: STATION_MARKER_PX, height: STATION_MARKER_PX, backgroundColor: '#FFFFFF',
+      borderRadius: '9999px', border: '2px solid #78716C',
+      boxShadow: '0 1px 4px rgba(28,31,38,0.25)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Train size={11} color="#57534E" />
+    </div>
+  ),
+  iconSize: [STATION_MARKER_PX, STATION_MARKER_PX],
+  iconAnchor: [STATION_MARKER_PX / 2, STATION_MARKER_PX / 2],
+  popupAnchor: [0, -STATION_MARKER_PX / 2 - 2],
+});
+
+const POI_MARKERS = MAP_POIS.map((p) => ({
+  ...p,
+  markerIcon: makePoiIcon(p.areaKey ? AREAS[p.areaKey].color : AIRPORT_COLOR, p.icon),
+}));
 
 /* ---------------------------------------------------------
    SUBCOMPONENTS
@@ -240,7 +321,19 @@ function EventRow({ ev, isLast, onAreaClick, index }) {
       </div>
       <div className="flex-1 pb-7 pt-1.5 min-w-0">
         <span className="text-sm text-stone-400" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{ev.time}</span>
-        <h4 className={`mt-0.5 ${ev.type ? 'font-medium text-stone-600' : 'font-bold text-stone-800'}`}>{ev.title}</h4>
+        <h4 className={`mt-0.5 ${ev.type ? 'font-medium text-stone-600' : 'font-bold text-stone-800'}`}>
+          {ev.maps ? (
+            <a
+              href={placeSearchLink(ev.maps)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 rounded"
+            >
+              <span className="underline decoration-dotted decoration-stone-300 underline-offset-4 group-hover:decoration-stone-500 transition-colors">{ev.title}</span>
+              <MapPin size={13} className="text-stone-300 group-hover:text-stone-500 transition-colors flex-shrink-0" />
+            </a>
+          ) : ev.title}
+        </h4>
         <p className="text-xs text-stone-500 mt-1 leading-relaxed">{ev.desc}</p>
         {area && ev.showBadge !== false && (
           <button
@@ -374,6 +467,77 @@ function AreaModal({ area, onClose }) {
   );
 }
 
+function MarkerPopupContent({ title, subtitle, query }) {
+  return (
+    <div style={{ fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif", minWidth: '150px' }}>
+      <div className="text-sm font-bold text-stone-800">{title}</div>
+      <div className="text-xs text-stone-500 mt-0.5">{subtitle}</div>
+      <a
+        href={placeSearchLink(query)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs font-medium inline-block mt-1.5"
+        style={{ color: '#1C7C8C' }}
+      >
+        在 Google Maps 開啟 ↗
+      </a>
+    </div>
+  );
+}
+
+function MapView() {
+  const bounds = useMemo(
+    () => L.latLngBounds([...MAP_POIS, ...MAP_STATIONS].map((p) => [p.lat, p.lng])).pad(0.06),
+    []
+  );
+
+  return (
+    <div className="px-5 pt-4 pb-24" style={{ animation: 'fadeUp 0.4s ease-out both' }}>
+      <div className="rounded-2xl overflow-hidden shadow-md relative isolate" style={{ height: '58vh', minHeight: '420px' }}>
+        <MapContainer bounds={bounds} scrollWheelZoom style={{ width: '100%', height: '100%' }}>
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            subdomains="abcd"
+          />
+          {POI_MARKERS.map((p) => (
+            <Marker key={p.name} position={[p.lat, p.lng]} icon={p.markerIcon}>
+              <Popup>
+                <MarkerPopupContent title={p.name} subtitle={p.tag} query={p.name} />
+              </Popup>
+            </Marker>
+          ))}
+          {MAP_STATIONS.map((s) => (
+            <Marker key={s.name} position={[s.lat, s.lng]} icon={STATION_ICON}>
+              <Popup>
+                <MarkerPopupContent title={s.name} subtitle={s.line} query={s.name} />
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+
+      <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-4">
+        {Object.values(AREAS).map((a) => (
+          <div key={a.key} className="flex items-center gap-1.5 text-xs text-stone-500">
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: a.color }} />
+            {a.short}
+          </div>
+        ))}
+        <div className="flex items-center gap-1.5 text-xs text-stone-500">
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: AIRPORT_COLOR }} />
+          機場
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-stone-500">
+          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-white border-2 border-stone-400" />
+          車站
+        </div>
+      </div>
+      <p className="text-xs text-stone-400 mt-2">點標記看地點資訊，再點「在 Google Maps 開啟」導航</p>
+    </div>
+  );
+}
+
 /* ---------------------------------------------------------
    MAIN APP
 --------------------------------------------------------- */
@@ -382,6 +546,7 @@ export default function TokyoTripPlanner() {
   const [selectedDay, setSelectedDay] = useState(1);
   const [activeArea, setActiveArea] = useState(null);
   const [dayKey, setDayKey] = useState(0);
+  const [view, setView] = useState('timeline');
   const day = DAYS.find((d) => d.id === selectedDay);
 
   const handleDayChange = (id) => {
@@ -444,31 +609,61 @@ export default function TokyoTripPlanner() {
           </div>
         </div>
 
-        {/* Day selector */}
-        <div className="flex gap-2 px-5 -mt-3 pb-1 overflow-x-auto no-scrollbar">
-          {DAYS.map((d) => (
-            <DayTab key={d.id} day={d} active={selectedDay === d.id} onClick={() => handleDayChange(d.id)} />
-          ))}
-        </div>
+        {view === 'timeline' ? (
+          <>
+            {/* Day selector */}
+            <div className="flex gap-2 px-5 -mt-3 pb-1 overflow-x-auto no-scrollbar">
+              {DAYS.map((d) => (
+                <DayTab key={d.id} day={d} active={selectedDay === d.id} onClick={() => handleDayChange(d.id)} />
+              ))}
+            </div>
 
-        {/* Day title */}
-        <div className="px-5 pt-5 pb-1">
-          <h2 key={dayKey} className="text-lg font-bold text-stone-800" style={{ animation: 'fadeUp 0.4s ease-out both' }}>{day.title}</h2>
-        </div>
+            {/* Day title */}
+            <div className="px-5 pt-5 pb-1">
+              <h2 key={dayKey} className="text-lg font-bold text-stone-800" style={{ animation: 'fadeUp 0.4s ease-out both' }}>{day.title}</h2>
+            </div>
 
-        {/* Timeline */}
-        <div className="px-5 pt-4" key={dayKey}>
-          {day.events.map((ev, idx) => (
-            <EventRow key={idx} ev={ev} isLast={idx === day.events.length - 1} onAreaClick={setActiveArea} index={idx} />
-          ))}
-        </div>
+            {/* Timeline */}
+            <div className="px-5 pt-4" key={dayKey}>
+              {day.events.map((ev, idx) => (
+                <EventRow key={idx} ev={ev} isLast={idx === day.events.length - 1} onAreaClick={setActiveArea} index={idx} />
+              ))}
+            </div>
 
-        {selectedDay === 5 && (
-          <div className="text-center pb-10 px-5 -mt-2">
-            <p className="text-stone-400 text-sm">五天四夜東京行，一路平安 🎌</p>
-          </div>
+            {selectedDay === 5 ? (
+              <div className="text-center pb-24 px-5 -mt-2">
+                <p className="text-stone-400 text-sm">五天四夜東京行，一路平安 🎌</p>
+              </div>
+            ) : (
+              <div className="pb-24" />
+            )}
+          </>
+        ) : (
+          <MapView />
         )}
-        {selectedDay !== 5 && <div className="pb-6" />}
+      </div>
+
+      {/* View toggle */}
+      <div
+        className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full p-1 shadow-xl"
+        style={{ backgroundColor: '#1C1F26' }}
+      >
+        <button
+          onClick={() => setView('timeline')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
+            view === 'timeline' ? 'bg-white text-stone-900' : 'text-white/70 hover:text-white'
+          }`}
+        >
+          <List size={14} /> 行程
+        </button>
+        <button
+          onClick={() => setView('map')}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
+            view === 'map' ? 'bg-white text-stone-900' : 'text-white/70 hover:text-white'
+          }`}
+        >
+          <MapIcon size={14} /> 地圖
+        </button>
       </div>
 
       <AreaModal area={activeArea ? AREAS[activeArea] : null} onClose={() => setActiveArea(null)} />

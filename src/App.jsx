@@ -183,18 +183,15 @@ const DAYS = [
     ],
   },
   {
-    id: 4, date: '08/22', weekday: '週六', areaKeys: ['akiba', 'shibuya', 'shinjuku'], title: '秋葉原・澀谷・新宿',
+    id: 4, date: '08/22', weekday: '週六', areaKeys: ['akiba', 'shinjuku'], title: '秋葉原尋寶・新宿收尾',
     events: [
       { time: '10:00', icon: Gift, title: '秋葉原：扭蛋・動漫店', desc: '扭蛋會館、Mandarake、Animate 一次逛', area: 'akiba', maps: '秋葉原電気街' },
       { time: '12:30', icon: Utensils, title: '秋葉原午餐', desc: '拉麵一級戰區，排隊也值得', area: 'akiba', showBadge: false },
       { time: '14:00', icon: Zap, title: 'Yodobashi Akiba', desc: '電器街，退稅、戰利品打包', area: 'akiba', maps: 'ヨドバシAkiba' },
-      { time: '15:30', icon: Train, title: '搭車前往澀谷', desc: '山手線約 30 分鐘', type: 'transit', maps: '渋谷駅' },
-      { time: '16:00', icon: Gamepad2, title: '澀谷 PARCO 6F', desc: 'Nintendo TOKYO、Pokémon Center、CAPCOM STORE 一次逛', area: 'shibuya', maps: '渋谷PARCO' },
-      { time: '17:30', icon: Camera, title: 'SHIBUYA SKY', desc: '229m 露天展望台，日落絕景；回程手扶梯夜景隧道必拍', area: 'shibuya', maps: 'SHIBUYA SKY' },
-      { time: '19:00', icon: Train, title: '搭車前往新宿', desc: '山手線 2 站，約 5 分鐘', type: 'transit', maps: '新宿駅' },
-      { time: '19:30', icon: Utensils, title: '新宿晚餐', desc: '今半壽喜燒，或思い出橫丁串燒', area: 'shinjuku', showBadge: false },
-      { time: '21:00', icon: Building2, title: '新宿逛街', desc: 'Don Quijote 補伴手禮，24 小時營業不怕晚', area: 'shinjuku' },
-      { time: '22:30', icon: Moon, title: '返回 Grand Nikko Tokyo Daiba', desc: '最後一晚住宿', area: 'daiba', showBadge: false, maps: 'グランドニッコー東京 台場' },
+      { time: '15:30', icon: Train, title: '搭車前往新宿', desc: '約 15-20 分鐘直達', type: 'transit', maps: '新宿駅' },
+      { time: '16:00', icon: Building2, title: '新宿逛街', desc: '伊勢丹、Don Quijote，補伴手禮／藥妝', area: 'shinjuku', maps: '伊勢丹新宿店' },
+      { time: '19:00', icon: Utensils, title: '新宿晚餐', desc: '今半壽喜燒，或思い出橫丁串燒', area: 'shinjuku', showBadge: false },
+      { time: '21:30', icon: Moon, title: '返回 Grand Nikko Tokyo Daiba', desc: '最後一晚住宿', area: 'daiba', showBadge: false, maps: 'グランドニッコー東京 台場' },
     ],
   },
   {

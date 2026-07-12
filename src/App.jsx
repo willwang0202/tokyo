@@ -4,15 +4,16 @@ import {
   PlaneTakeoff, PlaneLanding, Hotel, Luggage, Ship, Castle, Sparkles,
   ShoppingBag, Utensils, Gift, Zap, Train, Building2, Moon, Coffee,
   MapPin, X, Star, Map as MapIcon, List, Landmark, Camera, TreePine,
-  Fish, Drama, Palette, PawPrint, Music, Mountain
+  Fish, Drama, Palette, PawPrint, Music, Mountain, BookOpen, Compass,
+  Gamepad2, Dog
 } from 'lucide-react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-/* ---------------------------------------------------------
-   DATA — grounded in real places (verified via Places search)
---------------------------------------------------------- */
+/* =========================================================
+   DATA
+   ========================================================= */
 
 const AREAS = {
   bay: {
@@ -40,7 +41,7 @@ const AREAS = {
     key: 'daiba', name: '台場・豐洲', short: '台場', color: '#6B4FA0', tint: '#EEE9F7',
     intro: 'Grand Nikko 所在的台場，跟 teamLab Planets 所在的豐洲，一條百合海鷗號就能串起來，沿路都是東京灣海景。',
     food: [
-      { name: 'LaLaport Toyosu', tag: 'teamLab 步行 5 分鐘', note: '海濱商場，餐廳選擇最多，逛累了直接吃', rating: 3.9, placeId: 'ChIJRZuDqpiJGGARCb20R0epFcI' },
+      { name: 'LaLaport Toyosu', tag: 'teamLab 步行 5 分鐘', note: '海濱商場，餐廳選擇最多，逛累了直接吃', rating: 3.9, placeId: 'ChIJRZuDqpiJGGARCb20R0epFcI', lat: 35.6553, lng: 139.7926 },
       { name: 'Monsoon Cafe', tag: 'Aqua City 4F・泰越料理', note: '東京灣景觀，晚餐氣氛很好', rating: 4.3, placeId: 'ChIJL8dbO_aJGGARpzmnVUUI4n4', lat: 35.6292, lng: 139.7733 },
       { name: 'YORIMICHI ODAIBA', tag: 'Aqua City・創作和食', note: '正對彩虹大橋，招牌布丁別錯過', rating: 4.0, placeId: 'ChIJqZfFV9GJGGARJG-2zHeyUdc', lat: 35.6288, lng: 139.7729 },
       { name: '鉄板焼 銀杏', tag: 'Grand Nikko 30F・和牛鐵板燒', note: '住宿飯店高樓層鐵板燒，和牛配東京灣夜景，適合當犒賞餐', rating: 4.3, placeId: null, lat: 35.6244, lng: 139.7756 },
@@ -90,9 +91,38 @@ const AREAS = {
       'Yodobashi Akiba 冷氣強又能退稅，戰利品可以直接拖去新宿',
     ],
   },
+  shibuya: {
+    key: 'shibuya', name: '澀谷', short: '澀谷', color: '#C2185B', tint: '#FCE4EC',
+    intro: '從新宿搭山手線兩站就到，PARCO 的任天堂、寶可夢旗艦店是必訪，SHIBUYA SKY 的日落也不能錯過。',
+    food: [
+      { name: '牛かつ もと村 渋谷店', tag: '炸牛排', note: '60 秒炸出外酥內生的牛排，沾山葵醬油絕配', rating: 4.3, placeId: null, lat: 35.6598, lng: 139.6988 },
+      { name: '渋谷 のんべい横丁', tag: 'Nonbei Yokocho・居酒屋小巷', note: '比新宿思い出橫丁更窄更在地，昭和酒巷氛圍', rating: 4.2, placeId: null, lat: 35.6600, lng: 139.6998 },
+      { name: 'AFURI 渋谷', tag: '柚子鹽拉麵', note: '清爽系拉麵代表，柚子香氣開胃', rating: 4.2, placeId: null, lat: 35.6610, lng: 139.6972 },
+      { name: '根室花まる SHIBUYA STREAM店', tag: '迴轉壽司', note: '北海道根室直送，不用飛北海道也吃得到', rating: 4.1, placeId: null, lat: 35.6576, lng: 139.7020 },
+      { name: 'SHIBUYA PARCO B1 CHAOS KITCHEN', tag: 'PARCO 地下美食街', note: '逛 PARCO 順便解決一餐，選擇多元', rating: 3.9, placeId: null, lat: 35.6620, lng: 139.6984 },
+      { name: '金の蔵 渋谷109前店', tag: '居酒屋', note: '平價居酒屋，適合五個人輕鬆吃喝', rating: 3.7, placeId: null, lat: 35.6592, lng: 139.6990 },
+      { name: '兆楽 渋谷本店', tag: '中華料理', note: '澀谷隱藏名店，特製炒飯是常客必點', rating: 4.0, placeId: null, lat: 35.6593, lng: 139.6972 },
+    ],
+    shops: [
+      { name: 'Nintendo TOKYO', tag: 'PARCO 6F・任天堂官方直營', note: '日本唯一任天堂旗艦店，限定商品超多，必訪' },
+      { name: 'Pokémon Center SHIBUYA', tag: 'PARCO 6F・寶可夢中心', note: '澀谷限定皮卡丘商品，跟 Nintendo TOKYO 同層' },
+      { name: 'CAPCOM STORE TOKYO', tag: 'PARCO 6F・卡普空直營', note: '魔物獵人、快打旋風周邊，6 樓遊戲三巨頭之一' },
+      { name: 'JUMP SHOP 渋谷店', tag: 'PARCO 6F・少年 JUMP 周邊', note: '鬼滅、航海王、咒術迴戰，JUMP 系作品周邊' },
+      { name: 'SHIBUYA 109', tag: '流行服飾', note: '澀谷地標百貨，日系潮流和限定聯名' },
+      { name: 'MEGA ドン・キホーテ 渋谷本店', tag: '唐吉訶德・藥妝雜貨', note: '澀谷最大間，深夜也營業，伴手禮一站搞定' },
+      { name: 'Tower Records 渋谷店', tag: '唱片行', note: '日本最大唱片行旗艦店，動漫 CD 和周邊也多' },
+      { name: 'LOFT 渋谷店', tag: '生活雜貨', note: '文具、收納、美妝小物，日本品質生活雜貨' },
+    ],
+    tips: [
+      'PARCO 6F 是遊戲迷天堂：Nintendo TOKYO、Pokémon Center、CAPCOM STORE、JUMP SHOP 全在同一層，預留至少 1.5 小時',
+      'SHIBUYA SKY 日落時段票最搶手，建議提前上官網預約 17:00-18:00 場次',
+      '澀谷十字路口最佳拍攝點：SHIBUYA SKY 俯瞰，或是星巴克二樓正面',
+      '從新宿到澀谷搭山手線只要 2 站（約 5 分鐘），排在同一天最順',
+    ],
+  },
   shinjuku: {
     key: 'shinjuku', name: '新宿', short: '新宿', color: '#33406B', tint: '#E7E9F0',
-    intro: '從秋葉原跳一班車就到，百貨公司跟居酒屋巷弄並存，適合當一天的收尾。',
+    intro: '從澀谷跳兩站就到，百貨公司跟居酒屋巷弄並存，適合當一天的收尾。',
     food: [
       { name: '今半', tag: '高島屋 14F・壽喜燒', note: '逛完百貨不用再移動，直接吃晚餐', rating: null, placeId: 'ChIJMxx7bsWMGGARdrUfch90sVw', lat: 35.6873, lng: 139.7028 },
       { name: '思い出橫丁', tag: 'Omoide Yokocho・串燒小巷', note: '昭和氛圍的窄巷，跟白天的新宿很不一樣', rating: 4.2, placeId: 'ChIJP9eKBdeMGGAR0zzBXJNVj5A', lat: 35.6934, lng: 139.6996 },
@@ -117,10 +147,11 @@ const AREAS = {
     tips: [
       'Don Quijote 新宿店 24 小時營業，最後一晚買伴手禮／藥妝很方便，記得帶護照退稅',
       '高島屋 Times Square 就在車站旁，逛街、晚餐、回飯店動線一次搞定',
-      '想買任天堂／寶可夢官方商品：Nintendo TOKYO 和 Pokémon Center 澀谷店都在澀谷 PARCO 6F，從新宿搭山手線兩站就到',
     ],
   },
 };
+
+const AREA_KEYS = Object.keys(AREAS);
 
 const DAYS = [
   {
@@ -151,15 +182,18 @@ const DAYS = [
     ],
   },
   {
-    id: 4, date: '08/22', weekday: '週六', areaKeys: ['akiba', 'shinjuku'], title: '秋葉原尋寶・新宿收尾',
+    id: 4, date: '08/22', weekday: '週六', areaKeys: ['akiba', 'shibuya', 'shinjuku'], title: '秋葉原・澀谷・新宿',
     events: [
       { time: '10:00', icon: Gift, title: '秋葉原：扭蛋・動漫店', desc: '扭蛋會館、Mandarake、Animate 一次逛', area: 'akiba', maps: '秋葉原電気街' },
       { time: '12:30', icon: Utensils, title: '秋葉原午餐', desc: '拉麵一級戰區，排隊也值得', area: 'akiba', showBadge: false },
       { time: '14:00', icon: Zap, title: 'Yodobashi Akiba', desc: '電器街，退稅、戰利品打包', area: 'akiba', maps: 'ヨドバシAkiba' },
-      { time: '15:30', icon: Train, title: '搭車前往新宿', desc: '約 15-20 分鐘直達', type: 'transit', maps: '新宿駅' },
-      { time: '16:00', icon: Building2, title: '新宿逛街', desc: '伊勢丹、Don Quijote，補伴手禮／藥妝', area: 'shinjuku', maps: '伊勢丹新宿店' },
-      { time: '19:00', icon: Utensils, title: '新宿晚餐', desc: '今半壽喜燒，或思い出橫丁串燒', area: 'shinjuku', showBadge: false },
-      { time: '21:30', icon: Moon, title: '返回 Grand Nikko Tokyo Daiba', desc: '最後一晚住宿', area: 'daiba', showBadge: false, maps: 'グランドニッコー東京 台場' },
+      { time: '15:30', icon: Train, title: '搭車前往澀谷', desc: '山手線約 30 分鐘', type: 'transit', maps: '渋谷駅' },
+      { time: '16:00', icon: Gamepad2, title: '澀谷 PARCO 6F', desc: 'Nintendo TOKYO、Pokémon Center、CAPCOM STORE 一次逛', area: 'shibuya', maps: '渋谷PARCO' },
+      { time: '17:30', icon: Camera, title: 'SHIBUYA SKY', desc: '229m 露天展望台，趕上日落最美', area: 'shibuya', maps: 'SHIBUYA SKY' },
+      { time: '19:00', icon: Train, title: '搭車前往新宿', desc: '山手線 2 站，約 5 分鐘', type: 'transit', maps: '新宿駅' },
+      { time: '19:30', icon: Utensils, title: '新宿晚餐', desc: '今半壽喜燒，或思い出橫丁串燒', area: 'shinjuku', showBadge: false },
+      { time: '21:00', icon: Building2, title: '新宿逛街', desc: 'Don Quijote 補伴手禮，24 小時營業不怕晚', area: 'shinjuku' },
+      { time: '22:30', icon: Moon, title: '返回 Grand Nikko Tokyo Daiba', desc: '最後一晚住宿', area: 'daiba', showBadge: false, maps: 'グランドニッコー東京 台場' },
     ],
   },
   {
@@ -182,9 +216,9 @@ const mapLink = (f) => {
   return f.placeId ? `${base}&query_place_id=${f.placeId}` : base;
 };
 
-/* ---------------------------------------------------------
-   MAP DATA — POIs, restaurants, and transit (approx coords)
---------------------------------------------------------- */
+/* =========================================================
+   MAP DATA
+   ========================================================= */
 
 const AIRPORT_COLOR = '#1C1F26';
 
@@ -207,6 +241,9 @@ const MAP_POIS = [
   { name: 'DiverCity Tokyo Plaza', tag: '獨角獸鋼彈・購物', areaKey: 'daiba', type: 'shopping', icon: ShoppingBag, lat: 35.6249, lng: 139.7756 },
   { name: 'アクアシティお台場', tag: '購物・美食・彩虹大橋景', areaKey: 'daiba', type: 'shopping', icon: ShoppingBag, lat: 35.6290, lng: 139.7737 },
   { name: '秋葉原電気街', tag: '動漫・扭蛋・電器・Day 4', areaKey: 'akiba', type: 'shopping', icon: Gift, lat: 35.7005, lng: 139.7712 },
+  { name: '渋谷PARCO', tag: 'Nintendo TOKYO・寶可夢・Day 4', areaKey: 'shibuya', type: 'shopping', icon: Gamepad2, lat: 35.6620, lng: 139.6984 },
+  { name: 'SHIBUYA SKY', tag: '229m 露天展望台・Day 4', areaKey: 'shibuya', type: 'sight', icon: Camera, lat: 35.6585, lng: 139.7025 },
+  { name: 'SHIBUYA 109', tag: '流行服飾地標', areaKey: 'shibuya', type: 'shopping', icon: ShoppingBag, lat: 35.6592, lng: 139.6988 },
   { name: '高島屋タイムズスクエア', tag: '百貨・晚餐・Day 4', areaKey: 'shinjuku', type: 'shopping', icon: Building2, lat: 35.6875, lng: 139.7025 },
   { name: '羽田機場 第3航廈', tag: '國際線・Day 1 / Day 5', areaKey: null, type: 'transit', icon: PlaneTakeoff, lat: 35.5447, lng: 139.7676 },
 ];
@@ -220,10 +257,9 @@ const MAP_STATIONS = [
   { name: '新豊洲駅', line: '百合海鷗號・teamLab 最近站', areaKey: 'daiba', lat: 35.6444, lng: 139.7907 },
   { name: '豊洲駅', line: '有楽町線・百合海鷗號', areaKey: 'daiba', lat: 35.6547, lng: 139.7957 },
   { name: '秋葉原駅', line: 'JR 山手線・日比谷線', areaKey: 'akiba', lat: 35.6984, lng: 139.7731 },
+  { name: '渋谷駅', line: 'JR 山手線・銀座線・副都心線', areaKey: 'shibuya', lat: 35.6580, lng: 139.7016 },
   { name: '新宿駅', line: 'JR 山手線・中央線', areaKey: 'shinjuku', lat: 35.6896, lng: 139.7006 },
 ];
-
-/* 觀光推薦 — 出自 gltjp.com 東京必去景點特輯（q = Google Maps 搜尋字串） */
 
 const EXTRA_REGIONS = {
   more: { key: 'more', label: '更多東京', color: '#5B8A72' },
@@ -231,7 +267,6 @@ const EXTRA_REGIONS = {
 };
 
 const EXTRA_POIS = [
-  // 經典景點
   { name: '明治神宮', tag: '神社・原宿站旁', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.6764, lng: 139.6993 },
   { name: '淺草寺', tag: '東京最古老寺院・雷門', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.7148, lng: 139.7967, q: '浅草寺' },
   { name: '東京晴空塔', tag: '634m 展望塔', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.7101, lng: 139.8107, q: '東京スカイツリー' },
@@ -240,8 +275,8 @@ const EXTRA_POIS = [
   { name: '上野公園', tag: '春季櫻花祭會場', areaKey: 'more', type: 'sight', icon: TreePine, lat: 35.7141, lng: 139.7734, q: '上野恩賜公園' },
   { name: '新宿御苑', tag: '庭園・楓紅櫻花名所', areaKey: 'shinjuku', type: 'sight', icon: TreePine, lat: 35.6852, lng: 139.7100 },
   { name: '東京鐵塔', tag: '333m 經典地標', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.6586, lng: 139.7454, q: '東京タワー' },
-  { name: '澀谷十字路口', tag: '世界最繁忙十字路口', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.6595, lng: 139.7005, q: '渋谷スクランブル交差点' },
-  { name: 'SHIBUYA SKY', tag: '澀谷 229m 露天展望台', areaKey: 'more', type: 'sight', icon: Camera, lat: 35.6585, lng: 139.7025 },
+  { name: '澀谷十字路口', tag: '世界最繁忙十字路口', areaKey: 'shibuya', type: 'sight', icon: Camera, lat: 35.6595, lng: 139.7005, q: '渋谷スクランブル交差点' },
+  { name: '忠犬ハチ公像', tag: '澀谷站前・打卡地標', areaKey: 'shibuya', type: 'sight', icon: Dog, lat: 35.6590, lng: 139.7006, q: '忠犬ハチ公像' },
   { name: '歌舞伎座', tag: '銀座・歌舞伎劇場', areaKey: 'more', type: 'sight', icon: Drama, lat: 35.6697, lng: 139.7679 },
   { name: '三鷹之森吉卜力美術館', tag: '宮崎駿・需預約', areaKey: 'more', type: 'sight', icon: Palette, lat: 35.6962, lng: 139.5704, q: '三鷹の森ジブリ美術館' },
   { name: '東京哈利波特影城', tag: '豐島園・需預約', areaKey: 'more', type: 'sight', icon: Sparkles, lat: 35.7420, lng: 139.6497, q: 'ワーナー ブラザース スタジオツアー東京' },
@@ -255,14 +290,12 @@ const EXTRA_POIS = [
   { name: '淺草時代屋', tag: '人力車・和服體驗', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.7115, lng: 139.7935, q: '浅草 時代屋' },
   { name: '交響樂號遊輪', tag: '東京灣晚餐郵輪・日之出埠頭', areaKey: 'more', type: 'sight', icon: Ship, lat: 35.6494, lng: 139.7608, q: 'シンフォニークルーズ 日の出埠頭' },
   { name: '淺草鷲神社', tag: '11 月酉之市', areaKey: 'more', type: 'sight', icon: Landmark, lat: 35.7222, lng: 139.7929, q: '浅草 鷲神社' },
-  // 名店美食
   { name: '鰻 宮川', tag: '大塚・鰻魚飯老舖', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.7318, lng: 139.7288, q: 'うなぎ 宮川 大塚' },
   { name: '壽司大', tag: '豐洲市場・排隊壽司', areaKey: 'daiba', type: 'food', icon: Utensils, lat: 35.6459, lng: 139.7867, q: '寿司大 豊洲' },
   { name: '天婦羅近藤', tag: '銀座・米其林天婦羅', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6699, lng: 139.7625, q: 'てんぷら近藤 銀座' },
   { name: '更科堀井', tag: '麻布十番・蕎麥麵老舖', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6559, lng: 139.7365, q: '更科堀井 麻布十番' },
   { name: '人形町今半 本店', tag: '壽喜燒百年老店', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6862, lng: 139.7824, q: '人形町今半 本店' },
   { name: '東京拉麵街', tag: '東京站一番街 B1', areaKey: 'more', type: 'food', icon: Utensils, lat: 35.6803, lng: 139.7687, q: '東京ラーメンストリート' },
-  // 購物・伴手禮
   { name: '阿美橫丁', tag: '上野・平價商店街', areaKey: 'more', type: 'shopping', icon: ShoppingBag, lat: 35.7106, lng: 139.7745, q: 'アメ横' },
   { name: '竹下通', tag: '原宿・青少年潮流街', areaKey: 'more', type: 'shopping', icon: ShoppingBag, lat: 35.6716, lng: 139.7031, q: '竹下通り' },
   { name: '戶越銀座商店街', tag: '東京最長商店街', areaKey: 'more', type: 'shopping', icon: ShoppingBag, lat: 35.6160, lng: 139.7156, q: '戸越銀座商店街' },
@@ -270,13 +303,16 @@ const EXTRA_POIS = [
   { name: '表參道之丘', tag: '安藤忠雄設計・精品', areaKey: 'more', type: 'shopping', icon: Building2, lat: 35.6672, lng: 139.7086, q: '表参道ヒルズ' },
   { name: '東京站一番街', tag: '動漫街・伴手禮', areaKey: 'more', type: 'shopping', icon: Gift, lat: 35.6798, lng: 139.7694, q: '東京駅一番街' },
   { name: '伊勢丹新宿店', tag: '百貨・地下美食街', areaKey: 'shinjuku', type: 'shopping', icon: Building2, lat: 35.6917, lng: 139.7046, q: '伊勢丹新宿店' },
-  // 近郊小旅行
   { name: '橫濱', tag: '一日遊・港未來 21', areaKey: 'daytrip', type: 'sight', icon: Camera, lat: 35.4548, lng: 139.6317, q: '横浜みなとみらい' },
   { name: '鎌倉', tag: '一日遊・大佛與古都', areaKey: 'daytrip', type: 'sight', icon: Landmark, lat: 35.3192, lng: 139.5497, q: '鎌倉駅' },
   { name: '河口湖', tag: '兩天一夜・富士山景', areaKey: 'daytrip', type: 'sight', icon: Mountain, lat: 35.5036, lng: 138.7644, q: '河口湖' },
   { name: '箱根', tag: '兩天一夜・溫泉', areaKey: 'daytrip', type: 'sight', icon: Mountain, lat: 35.2329, lng: 139.1058, q: '箱根湯本' },
   { name: '輕井澤', tag: '兩天一夜・避暑勝地', areaKey: 'daytrip', type: 'sight', icon: TreePine, lat: 36.3428, lng: 138.6353, q: '軽井沢駅' },
 ];
+
+/* =========================================================
+   MAP MARKERS (derived)
+   ========================================================= */
 
 const POI_MARKER_PX = 32;
 const FOOD_MARKER_PX = 25;
@@ -332,7 +368,7 @@ const ALL_MARKERS = [
   })),
   ...Object.values(AREAS).flatMap((a) =>
     a.food.filter((f) => f.lat != null).map((f) => ({
-      name: f.name, tag: f.tag, rating: f.rating, areaKey: a.key, type: 'food',
+      name: f.name, tag: f.tag, note: f.note, rating: f.rating, areaKey: a.key, type: 'food',
       lat: f.lat, lng: f.lng, href: mapLink(f), markerIcon: FOOD_ICONS[a.key],
     }))
   ),
@@ -353,25 +389,30 @@ const TYPE_FILTERS = [
   ...PLACE_TYPES,
 ];
 
-/* ---------------------------------------------------------
+/* =========================================================
    SUBCOMPONENTS
---------------------------------------------------------- */
+   ========================================================= */
 
 function DayTab({ day, active, onClick }) {
+  const primaryColor = AREAS[day.areaKeys[0]]?.color ?? NEUTRAL;
   return (
     <button
       onClick={onClick}
       className={`flex-shrink-0 rounded-2xl px-3 py-3 text-left transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
         active ? 'text-white shadow-lg' : 'bg-white text-stone-700 hover:shadow-md'
       }`}
-      style={{ width: '74px', backgroundColor: active ? '#1C1F26' : undefined }}
+      style={{
+        width: '82px',
+        backgroundColor: active ? '#1C1F26' : undefined,
+        borderBottom: active ? `3px solid ${primaryColor}` : '3px solid transparent',
+      }}
     >
       <div className="text-xs opacity-60 tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>DAY</div>
       <div className="text-2xl font-bold leading-none mt-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{day.id}</div>
-      <div className="text-[10px] mt-1.5 opacity-70 leading-tight">{day.date}<br />{day.weekday}</div>
-      <div className="flex gap-1 mt-2">
+      <div className="text-[10px] mt-1.5 opacity-70 leading-tight">{day.date} {day.weekday}</div>
+      <div className="flex gap-1 mt-2.5">
         {day.areaKeys.map((k) => (
-          <span key={k} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: AREAS[k].color }} />
+          <span key={k} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: AREAS[k]?.color ?? NEUTRAL }} />
         ))}
       </div>
     </button>
@@ -395,7 +436,6 @@ function EventRow({ ev, isLast, onAreaClick, index }) {
 
   const area = ev.area ? AREAS[ev.area] : null;
   const nodeColor = area ? area.color : NEUTRAL;
-  const nodeTint = area ? area.tint : NEUTRAL_TINT;
 
   return (
     <div
@@ -413,11 +453,11 @@ function EventRow({ ev, isLast, onAreaClick, index }) {
         >
           <ev.icon size={17} color="#FFFFFF" />
         </div>
-        {!isLast && <div className="w-0.5 flex-1 transition-all duration-700" style={{ backgroundColor: nodeTint === NEUTRAL_TINT ? NEUTRAL : nodeColor, opacity: area ? 0.55 : 0.45, minHeight: '1.75rem' }} />}
+        {!isLast && <div className="w-0.5 flex-1 transition-all duration-700" style={{ backgroundColor: nodeColor, opacity: area ? 0.55 : 0.45, minHeight: '1.75rem' }} />}
       </div>
-      <div className="flex-1 pb-7 pt-1.5 min-w-0">
+      <div className="flex-1 pb-8 pt-1.5 min-w-0">
         <span className="text-sm text-stone-400" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>{ev.time}</span>
-        <h4 className={`mt-0.5 ${ev.type ? 'font-medium text-stone-600' : 'font-bold text-stone-800'}`}>
+        <h4 className={`mt-1 ${ev.type ? 'font-medium text-stone-600' : 'font-bold text-stone-800'}`}>
           {ev.maps ? (
             <a
               href={placeSearchLink(ev.maps)}
@@ -430,11 +470,11 @@ function EventRow({ ev, isLast, onAreaClick, index }) {
             </a>
           ) : ev.title}
         </h4>
-        <p className="text-xs text-stone-500 mt-1 leading-relaxed">{ev.desc}</p>
+        <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">{ev.desc}</p>
         {area && ev.showBadge !== false && (
           <button
             onClick={() => onAreaClick(ev.area)}
-            className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 hover:shadow-md hover:scale-[1.03] active:scale-95 focus:outline-none focus-visible:ring-2"
+            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 hover:shadow-md hover:scale-[1.03] active:scale-95 focus:outline-none focus-visible:ring-2"
             style={{ backgroundColor: area.tint, color: area.color }}
           >
             <Utensils size={12} />
@@ -446,145 +486,37 @@ function EventRow({ ev, isLast, onAreaClick, index }) {
   );
 }
 
-const CARD_STAGGER_BASE_MS = 150;
-const CARD_STAGGER_STEP_MS = 50;
-const CARD_STAGGER_MAX_STEPS = 8;
-
+const CARD_STAGGER_BASE_MS = 100;
+const CARD_STAGGER_STEP_MS = 40;
+const CARD_STAGGER_MAX_STEPS = 10;
 const cardDelay = (i) => CARD_STAGGER_BASE_MS + Math.min(i, CARD_STAGGER_MAX_STEPS) * CARD_STAGGER_STEP_MS;
 
-function PlaceCard({ place, delay }) {
+function PlaceCard({ place, delay, areaColor }) {
   return (
     <a
       href={mapLink(place)}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-start justify-between gap-3 p-3 rounded-xl bg-stone-50 hover:bg-stone-100 hover:shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2"
-      style={{ animation: `fadeUp 0.35s ease-out ${delay}ms both` }}
+      className="flex items-start justify-between gap-3 p-4 rounded-xl bg-white hover:bg-stone-50 shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus-visible:ring-2"
+      style={{
+        animation: `fadeUp 0.35s ease-out ${delay}ms both`,
+        borderLeft: areaColor ? `3px solid ${areaColor}` : undefined,
+      }}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-stone-800 text-sm">{place.name}</span>
+          <span className="font-semibold text-stone-800 text-sm">{place.name}</span>
           {place.rating && (
             <span className="text-xs text-amber-600 flex items-center gap-0.5 flex-shrink-0">
               <Star size={10} fill="currentColor" />{place.rating}
             </span>
           )}
         </div>
-        <div className="text-xs text-stone-400 mt-0.5">{place.tag}</div>
-        <div className="text-xs text-stone-500 mt-1">{place.note}</div>
+        <div className="text-xs text-stone-400 mt-1">{place.tag}</div>
+        <div className="text-xs text-stone-500 mt-1.5 leading-relaxed">{place.note}</div>
       </div>
       <MapPin size={16} className="text-stone-300 mt-1 flex-shrink-0" />
     </a>
-  );
-}
-
-function AreaModal({ area, onClose }) {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    if (!area) { setShow(false); return; }
-    requestAnimationFrame(() => requestAnimationFrame(() => setShow(true)));
-    const handler = (e) => { if (e.key === 'Escape') handleClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [area]);
-
-  const handleClose = () => {
-    setShow(false);
-    setTimeout(onClose, 280);
-  };
-
-  if (!area) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div
-        className="absolute inset-0 backdrop-blur-sm transition-all duration-300"
-        style={{ backgroundColor: show ? 'rgba(28,31,38,0.5)' : 'rgba(28,31,38,0)' }}
-        onClick={handleClose}
-      />
-      <div
-        className="relative bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl overflow-y-auto transition-all duration-300 ease-out"
-        style={{
-          maxHeight: '85vh',
-          opacity: show ? 1 : 0,
-          transform: show ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.97)',
-        }}
-      >
-        <div className="sticky top-0 z-10 px-6 pt-6 pb-5 rounded-t-3xl" style={{ backgroundColor: area.color }}>
-          <button
-            onClick={handleClose}
-            aria-label="關閉"
-            className="absolute right-5 top-5 text-white/80 hover:text-white transition-all duration-200 hover:scale-110 hover:rotate-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-full"
-          >
-            <X size={22} />
-          </button>
-          <div className="text-white/70 text-xs tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>AREA</div>
-          <h3 className="text-white text-2xl font-bold mt-1">{area.name}</h3>
-        </div>
-
-        <div className="px-6 py-5">
-          <p className="text-sm text-stone-600 leading-relaxed mb-6">{area.intro}</p>
-
-          <div className="mb-6">
-            <h4 className="text-xs tracking-widest text-stone-400 mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>FOOD・沿線美食</h4>
-            <div className="space-y-2.5">
-              {area.food.map((f, i) => (
-                <PlaceCard key={i} place={f} delay={cardDelay(i)} />
-              ))}
-            </div>
-          </div>
-
-          {area.shops && (
-            <div className="mb-6">
-              <h4 className="text-xs tracking-widest text-stone-400 mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>SHOP・逛街購物</h4>
-              <div className="space-y-2.5">
-                {area.shops.map((s, i) => (
-                  <PlaceCard key={i} place={s} delay={cardDelay(i)} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <h4 className="text-xs tracking-widest text-stone-400 mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>TIPS・小提醒</h4>
-            <ul className="space-y-2.5">
-              {area.tips.map((t, i) => (
-                <li key={i} className="text-sm text-stone-600 leading-relaxed flex gap-2.5">
-                  <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: area.color }} />
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MarkerPopupContent({ title, subtitle, rating, href }) {
-  return (
-    <div style={{ fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif", minWidth: '150px' }}>
-      <div className="flex items-center gap-1.5">
-        <span className="text-sm font-bold text-stone-800">{title}</span>
-        {rating && (
-          <span className="text-xs text-amber-600 flex items-center gap-0.5 flex-shrink-0">
-            <Star size={10} fill="currentColor" />{rating}
-          </span>
-        )}
-      </div>
-      <div className="text-xs text-stone-500 mt-0.5">{subtitle}</div>
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs font-medium inline-block mt-1.5"
-        style={{ color: '#1C7C8C' }}
-      >
-        在 Google Maps 開啟 ↗
-      </a>
-    </div>
   );
 }
 
@@ -598,7 +530,7 @@ function FilterChips({ options, value, onChange }) {
             key={o.key}
             onClick={() => onChange(o.key)}
             className={`flex items-center gap-1.5 flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 ${
-              isActive ? 'text-white' : 'bg-white text-stone-600 hover:bg-stone-50'
+              isActive ? 'text-white' : 'bg-white/90 text-stone-600 hover:bg-white'
             }`}
             style={{ backgroundColor: isActive ? (o.color || '#1C1F26') : undefined }}
           >
@@ -612,6 +544,32 @@ function FilterChips({ options, value, onChange }) {
   );
 }
 
+function MarkerPopupContent({ title, subtitle, note, rating, href }) {
+  return (
+    <div style={{ fontFamily: "'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif", minWidth: '160px', maxWidth: '240px' }}>
+      <div className="flex items-center gap-1.5">
+        <span className="text-sm font-bold text-stone-800">{title}</span>
+        {rating && (
+          <span className="text-xs text-amber-600 flex items-center gap-0.5 flex-shrink-0">
+            <Star size={10} fill="currentColor" />{rating}
+          </span>
+        )}
+      </div>
+      <div className="text-xs text-stone-500 mt-0.5">{subtitle}</div>
+      {note && <div className="text-xs text-stone-600 mt-1 leading-relaxed">{note}</div>}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs font-medium inline-block mt-1.5"
+        style={{ color: '#1C7C8C' }}
+      >
+        在 Google Maps 開啟 ↗
+      </a>
+    </div>
+  );
+}
+
 function FitToMarkers({ markers, filterKey }) {
   const map = useMap();
   const isFirstRender = useRef(true);
@@ -621,11 +579,105 @@ function FitToMarkers({ markers, filterKey }) {
     if (!markers.length) return;
     const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng])).pad(0.15);
     map.flyToBounds(bounds, { duration: 0.7, maxZoom: 15 });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey]);
 
   return null;
 }
+
+/* =========================================================
+   AREA GUIDE VIEW
+   ========================================================= */
+
+function AreaGuide({ selectedArea, onSelectArea }) {
+  const area = AREAS[selectedArea];
+
+  return (
+    <div className="pb-24" style={{ animation: 'fadeUp 0.4s ease-out both' }}>
+      {/* Area selector pills */}
+      <div className="flex gap-2 px-5 py-4 overflow-x-auto no-scrollbar">
+        {AREA_KEYS.map((k) => {
+          const a = AREAS[k];
+          const isActive = k === selectedArea;
+          return (
+            <button
+              key={k}
+              onClick={() => onSelectArea(k)}
+              className={`flex items-center gap-1.5 flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 ${
+                isActive ? 'text-white shadow-md' : 'bg-white text-stone-600 hover:shadow-sm'
+              }`}
+              style={{
+                backgroundColor: isActive ? a.color : undefined,
+                border: isActive ? 'none' : `1.5px solid ${a.color}40`,
+              }}
+            >
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: isActive ? '#FFFFFF' : a.color }} />
+              {a.short}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Area hero header */}
+      <div
+        key={selectedArea}
+        className="mx-5 rounded-2xl px-6 py-6 mb-6"
+        style={{ backgroundColor: area.color, animation: 'fadeUp 0.35s ease-out both' }}
+      >
+        <div className="text-white/50 text-xs tracking-widest mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>AREA GUIDE</div>
+        <h2 className="text-white text-2xl font-bold">{area.name}</h2>
+        <p className="text-white/80 text-sm mt-3 leading-relaxed">{area.intro}</p>
+      </div>
+
+      {/* Food section */}
+      <div className="px-5 mb-8" key={`${selectedArea}-food`} style={{ animation: 'fadeUp 0.35s ease-out 80ms both' }}>
+        <h3 className="text-xs tracking-widest text-stone-400 mb-4 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <Utensils size={14} style={{ color: area.color }} />
+          FOOD・沿線美食
+        </h3>
+        <div className="space-y-3">
+          {area.food.map((f, i) => (
+            <PlaceCard key={f.name} place={f} delay={cardDelay(i)} areaColor={area.color} />
+          ))}
+        </div>
+      </div>
+
+      {/* Shop section */}
+      {area.shops && area.shops.length > 0 && (
+        <div className="px-5 mb-8" key={`${selectedArea}-shops`} style={{ animation: 'fadeUp 0.35s ease-out 160ms both' }}>
+          <h3 className="text-xs tracking-widest text-stone-400 mb-4 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <ShoppingBag size={14} style={{ color: area.color }} />
+            SHOP・逛街購物
+          </h3>
+          <div className="space-y-3">
+            {area.shops.map((s, i) => (
+              <PlaceCard key={s.name} place={s} delay={cardDelay(i)} areaColor={area.color} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tips section */}
+      <div className="px-5" key={`${selectedArea}-tips`} style={{ animation: 'fadeUp 0.35s ease-out 240ms both' }}>
+        <h3 className="text-xs tracking-widest text-stone-400 mb-4 flex items-center gap-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+          <Sparkles size={14} style={{ color: area.color }} />
+          TIPS・小提醒
+        </h3>
+        <div className="rounded-2xl p-5 space-y-3" style={{ backgroundColor: area.tint }}>
+          {area.tips.map((t, i) => (
+            <div key={i} className="text-sm text-stone-700 leading-relaxed flex gap-3">
+              <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: area.color }} />
+              {t}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MAP VIEW
+   ========================================================= */
 
 function MapView() {
   const [region, setRegion] = useState('all');
@@ -645,12 +697,13 @@ function MapView() {
 
   return (
     <div className="px-5 pt-4 pb-24" style={{ animation: 'fadeUp 0.4s ease-out both' }}>
-      <div className="space-y-2 mb-3">
-        <FilterChips options={REGION_FILTERS} value={region} onChange={setRegion} />
-        <FilterChips options={TYPE_FILTERS} value={placeType} onChange={setPlaceType} />
-      </div>
+      <div className="rounded-2xl overflow-hidden shadow-md relative isolate" style={{ height: '65vh', minHeight: '420px' }}>
+        {/* Overlay filters */}
+        <div className="absolute top-3 left-3 right-3 z-[1000] space-y-1.5">
+          <FilterChips options={REGION_FILTERS} value={region} onChange={setRegion} />
+          <FilterChips options={TYPE_FILTERS} value={placeType} onChange={setPlaceType} />
+        </div>
 
-      <div className="rounded-2xl overflow-hidden shadow-md relative isolate" style={{ height: '54vh', minHeight: '400px' }}>
         <MapContainer
           bounds={bounds}
           scrollWheelZoom
@@ -674,7 +727,7 @@ function MapView() {
           {visibleMarkers.map((m) => (
             <Marker key={`${m.areaKey}-${m.name}`} position={[m.lat, m.lng]} icon={m.markerIcon}>
               <Popup>
-                <MarkerPopupContent title={m.name} subtitle={m.tag} rating={m.rating} href={m.href} />
+                <MarkerPopupContent title={m.name} subtitle={m.tag} note={m.note} rating={m.rating} href={m.href} />
               </Popup>
             </Marker>
           ))}
@@ -682,26 +735,31 @@ function MapView() {
       </div>
 
       <p className="text-xs text-stone-400 mt-3">
-        顯示 {visibleMarkers.length} 個地點・點標記看資訊，再點「在 Google Maps 開啟」導航・餐廳位置為約略標示
+        顯示 {visibleMarkers.length} 個地點・點標記看資訊，再點「在 Google Maps 開啟」導航
       </p>
     </div>
   );
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    MAIN APP
---------------------------------------------------------- */
+   ========================================================= */
 
 export default function TokyoTripPlanner() {
   const [selectedDay, setSelectedDay] = useState(1);
-  const [activeArea, setActiveArea] = useState(null);
   const [dayKey, setDayKey] = useState(0);
   const [view, setView] = useState('timeline');
+  const [selectedArea, setSelectedArea] = useState('bay');
   const day = DAYS.find((d) => d.id === selectedDay);
 
   const handleDayChange = (id) => {
     setSelectedDay(id);
     setDayKey((k) => k + 1);
+  };
+
+  const handleAreaClick = (areaKey) => {
+    setSelectedArea(areaKey);
+    setView('guide');
   };
 
   return (
@@ -721,8 +779,8 @@ export default function TokyoTripPlanner() {
 
       <div className="max-w-xl mx-auto bg-stone-100 min-h-screen sm:min-h-0 sm:my-6 sm:rounded-3xl sm:shadow-xl overflow-hidden">
 
-        {/* Header */}
-        <div className="px-5 pt-8 pb-6 rounded-b-3xl" style={{ backgroundColor: '#1C1F26' }}>
+        {/* Header — simplified */}
+        <div className="px-5 pt-8 pb-5 rounded-b-3xl" style={{ backgroundColor: '#1C1F26' }}>
           <div className="flex items-start justify-between">
             <div>
               <div className="text-white/40 text-xs tracking-widest" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>TOKYO ITINERARY</div>
@@ -733,50 +791,25 @@ export default function TokyoTripPlanner() {
               <div className="text-white text-lg font-medium" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>08.19–08.23</div>
             </div>
           </div>
-
-          {/* area legend */}
-          <div className="flex items-center gap-2 mt-5 overflow-x-auto no-scrollbar pb-1">
-            {Object.values(AREAS).map((a) => (
-              <button
-                key={a.key}
-                onClick={() => setActiveArea(a.key)}
-                className="flex items-center gap-1.5 flex-shrink-0 bg-white/10 hover:bg-white/20 rounded-full px-3 py-1.5 transition-all duration-200 hover:scale-[1.04] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
-              >
-                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: a.color }} />
-                <span className="text-white/80 text-xs whitespace-nowrap">{a.short}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* flight tags */}
-          <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 text-white/80 text-xs whitespace-nowrap flex-shrink-0">
-              <PlaneTakeoff size={12} /> CI220・松山→羽田・09:00
-            </div>
-            <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1.5 text-white/80 text-xs whitespace-nowrap flex-shrink-0">
-              <PlaneLanding size={12} /> CI221・羽田→松山・14:30
-            </div>
-          </div>
+          <div className="text-white/50 text-xs mt-3">5 位旅人・松山↔羽田・CI220 / CI221</div>
         </div>
 
-        {view === 'timeline' ? (
+        {/* View content */}
+        {view === 'timeline' && (
           <>
-            {/* Day selector */}
             <div className="flex gap-2 px-5 -mt-3 pb-1 overflow-x-auto no-scrollbar">
               {DAYS.map((d) => (
                 <DayTab key={d.id} day={d} active={selectedDay === d.id} onClick={() => handleDayChange(d.id)} />
               ))}
             </div>
 
-            {/* Day title */}
             <div className="px-5 pt-5 pb-1">
               <h2 key={dayKey} className="text-lg font-bold text-stone-800" style={{ animation: 'fadeUp 0.4s ease-out both' }}>{day.title}</h2>
             </div>
 
-            {/* Timeline */}
             <div className="px-5 pt-4" key={dayKey}>
               {day.events.map((ev, idx) => (
-                <EventRow key={idx} ev={ev} isLast={idx === day.events.length - 1} onAreaClick={setActiveArea} index={idx} />
+                <EventRow key={idx} ev={ev} isLast={idx === day.events.length - 1} onAreaClick={handleAreaClick} index={idx} />
               ))}
             </div>
 
@@ -788,35 +821,38 @@ export default function TokyoTripPlanner() {
               <div className="pb-24" />
             )}
           </>
-        ) : (
+        )}
+
+        {view === 'guide' && (
+          <AreaGuide selectedArea={selectedArea} onSelectArea={setSelectedArea} />
+        )}
+
+        {view === 'map' && (
           <MapView />
         )}
       </div>
 
-      {/* View toggle */}
+      {/* 3-tab bottom nav */}
       <div
         className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 rounded-full p-1 shadow-xl"
         style={{ backgroundColor: '#1C1F26' }}
       >
-        <button
-          onClick={() => setView('timeline')}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
-            view === 'timeline' ? 'bg-white text-stone-900' : 'text-white/70 hover:text-white'
-          }`}
-        >
-          <List size={14} /> 行程
-        </button>
-        <button
-          onClick={() => setView('map')}
-          className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
-            view === 'map' ? 'bg-white text-stone-900' : 'text-white/70 hover:text-white'
-          }`}
-        >
-          <MapIcon size={14} /> 地圖
-        </button>
+        {[
+          { key: 'timeline', icon: List, label: '行程' },
+          { key: 'guide', icon: Compass, label: '地區' },
+          { key: 'map', icon: MapIcon, label: '地圖' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setView(tab.key)}
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${
+              view === tab.key ? 'bg-white text-stone-900' : 'text-white/70 hover:text-white'
+            }`}
+          >
+            <tab.icon size={14} /> {tab.label}
+          </button>
+        ))}
       </div>
-
-      <AreaModal area={activeArea ? AREAS[activeArea] : null} onClose={() => setActiveArea(null)} />
     </div>
   );
 }

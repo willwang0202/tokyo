@@ -699,7 +699,7 @@ function MapView() {
     <div className="px-5 pt-4 pb-24" style={{ animation: 'fadeUp 0.4s ease-out both' }}>
       <div className="rounded-2xl overflow-hidden shadow-md relative isolate" style={{ height: '65vh', minHeight: '420px' }}>
         {/* Overlay filters */}
-        <div className="absolute top-3 left-3 right-3 z-[1000] space-y-1.5">
+        <div className="absolute top-3 left-12 right-3 z-[1000] space-y-1.5">
           <FilterChips options={REGION_FILTERS} value={region} onChange={setRegion} />
           <FilterChips options={TYPE_FILTERS} value={placeType} onChange={setPlaceType} />
         </div>

@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Plaintext travel documents — never commit (see scripts/encrypt-vault.mjs)
+secrets/

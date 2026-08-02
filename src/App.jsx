@@ -10,6 +10,8 @@ import {
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import DocumentVault from './components/DocumentVault.jsx';
+import { useVault, hasDocuments } from './hooks/useVault.js';
 
 /* =========================================================
    DATA
@@ -156,19 +158,19 @@ const AREA_KEYS = Object.keys(AREAS);
 
 const DAYS = [
   {
-    id: 1, date: '08/19', weekday: '週三', areaKeys: ['bay'], title: '抵達東京・海洋日',
+    id: 1, date: '08/19', weekday: '週三', areaKeys: ['bay'], title: '抵達東京・樂園日',
     events: [
       { time: '09:00', icon: PlaneTakeoff, title: '中華航空 CI220 松山 → 羽田', desc: '國際線建議提前 2.5 小時抵達機場', type: 'flight', maps: '台北松山機場' },
       { time: '13:10', icon: PlaneLanding, title: '抵達羽田機場', desc: '入境審查＋提領行李，預留 40-60 分鐘', type: 'flight', maps: '羽田空港 第3ターミナル' },
       { time: '約 15:00', icon: Hotel, title: 'Hilton Tokyo Bay', desc: '先寄放行李，正式入住晚點再辦理', area: 'bay', maps: 'Hilton Tokyo Bay' },
-      { time: '16:00', icon: Ship, title: '東京迪士尼海洋', desc: '開放到 21:00，夜間的威尼斯貢多拉很值得', area: 'bay', maps: '東京ディズニーシー' },
+      { time: '16:00', icon: Castle, title: '東京迪士尼樂園', desc: 'After 3 護照 15:00 起入園，開放到 21:00，晚上的遊行和城堡投影是重頭戲', area: 'bay', maps: '東京ディズニーランド' },
       { time: '21:30', icon: Moon, title: '返回 Hilton Tokyo Bay', desc: '第一晚住宿', area: 'bay', showBadge: false, maps: 'Hilton Tokyo Bay' },
     ],
   },
   {
-    id: 2, date: '08/20', weekday: '週四', areaKeys: ['bay'], title: '迪士尼陸地全日',
+    id: 2, date: '08/20', weekday: '週四', areaKeys: ['bay'], title: '迪士尼海洋全日',
     events: [
-      { time: '08:30', icon: Castle, title: '東京迪士尼樂園', desc: '全日暢玩，建議提早入園搶熱門設施', area: 'bay', maps: '東京ディズニーランド' },
+      { time: '08:30', icon: Ship, title: '東京迪士尼海洋', desc: '一日護照全日暢玩，建議提早入園搶熱門設施，夜間的威尼斯貢多拉很值得', area: 'bay', maps: '東京ディズニーシー' },
       { time: '21:00', icon: Moon, title: '返回 Hilton Tokyo Bay', desc: '第二晚住宿', area: 'bay', showBadge: false, maps: 'Hilton Tokyo Bay' },
     ],
   },
@@ -229,8 +231,8 @@ const PLACE_TYPES = [
 ];
 
 const MAP_POIS = [
-  { name: '東京迪士尼樂園', tag: '主題樂園・Day 2', areaKey: 'bay', type: 'sight', icon: Castle, lat: 35.6329, lng: 139.8804 },
-  { name: '東京迪士尼海洋', tag: '主題樂園・Day 1', areaKey: 'bay', type: 'sight', icon: Ship, lat: 35.6267, lng: 139.8850 },
+  { name: '東京迪士尼樂園', tag: '主題樂園・Day 1', areaKey: 'bay', type: 'sight', icon: Castle, lat: 35.6329, lng: 139.8804 },
+  { name: '東京迪士尼海洋', tag: '主題樂園・Day 2', areaKey: 'bay', type: 'sight', icon: Ship, lat: 35.6267, lng: 139.8850 },
   { name: 'Hilton Tokyo Bay', tag: '住宿・Day 1-2', areaKey: 'bay', type: 'hotel', icon: Hotel, lat: 35.6273, lng: 139.8907 },
   { name: 'Ikspiari', tag: '購物・美食', areaKey: 'bay', type: 'shopping', icon: ShoppingBag, lat: 35.6357, lng: 139.8846 },
   { name: 'グランドニッコー東京 台場', tag: '住宿・Day 3-4', areaKey: 'daiba', type: 'hotel', icon: Hotel, lat: 35.6242, lng: 139.7752 },
@@ -749,6 +751,7 @@ export default function TokyoTripPlanner() {
   const [view, setView] = useState('timeline');
   const [selectedArea, setSelectedArea] = useState('bay');
   const day = DAYS.find((d) => d.id === selectedDay);
+  const vault = useVault();
 
   const handleDayChange = (id) => {
     setSelectedDay(id);
@@ -810,6 +813,17 @@ export default function TokyoTripPlanner() {
                 <EventRow key={idx} ev={ev} isLast={idx === day.events.length - 1} onAreaClick={handleAreaClick} index={idx} />
               ))}
             </div>
+
+            {hasDocuments(selectedDay) && (
+              <DocumentVault
+                key={selectedDay}
+                groups={vault.groupsForDay(selectedDay)}
+                status={vault.status}
+                error={vault.error}
+                onUnlock={vault.unlock}
+                onLock={vault.lock}
+              />
+            )}
 
             {selectedDay === 5 ? (
               <div className="text-center pb-24 px-5 -mt-2">

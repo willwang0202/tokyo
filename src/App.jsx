@@ -11,6 +11,7 @@ import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import DocumentVault from './components/DocumentVault.jsx';
+import BuyList from './components/BuyList.jsx';
 import { useVault, hasDocuments } from './hooks/useVault.js';
 
 /* =========================================================
@@ -842,6 +843,10 @@ export default function TokyoTripPlanner() {
         {view === 'map' && (
           <MapView />
         )}
+
+        {view === 'buy' && (
+          <BuyList areas={AREAS} vault={vault} />
+        )}
       </div>
 
       {/* 3-tab bottom nav */}
@@ -853,6 +858,7 @@ export default function TokyoTripPlanner() {
           { key: 'timeline', icon: List, label: '行程' },
           { key: 'guide', icon: Compass, label: '地區' },
           { key: 'map', icon: MapIcon, label: '地圖' },
+          { key: 'buy', icon: ShoppingBag, label: '購物清單' },
         ].map((tab) => (
           <button
             key={tab.key}

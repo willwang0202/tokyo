@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "encrypt-vault": "node scripts/encrypt-vault.mjs"
+    "encrypt-vault": "node scripts/encrypt-vault.mjs",
+    "buy-list-token": "node scripts/buy-list-token.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

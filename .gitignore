@@ -25,3 +25,7 @@ dist-ssr
 
 # Plaintext travel documents — never commit (see scripts/encrypt-vault.mjs)
 secrets/
+
+# Supabase connection for the buy list — see .env.example
+.env
+.env.local

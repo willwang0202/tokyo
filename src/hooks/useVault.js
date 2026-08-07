@@ -1,8 +1,11 @@
 import { useCallback, useState } from 'react';
 import envelope from '../data/vault.encrypted.json';
 import { decryptJson, WrongPassphraseError } from '../lib/vaultCrypto.js';
+import { deriveWriteToken } from '../lib/buyListToken.js';
 
-const CACHE_KEY = 'tokyo.vault.v1';
+// v2 adds the buy-list write token to the cached session; a v1 entry has no
+// token to offer, so it is ignored and the passphrase is asked for once more.
+const CACHE_KEY = 'tokyo.vault.v2';
 
 /** Ties the cache to this exact ciphertext so re-encrypting invalidates it. */
 const FINGERPRINT = envelope.data.slice(0, 32);
@@ -19,28 +22,28 @@ export const VAULT_STATUS = {
 function readCache() {
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY) ?? 'null');
-    return cached?.fingerprint === FINGERPRINT ? cached.vault : null;
+    return cached?.fingerprint === FINGERPRINT ? cached.session : null;
   } catch {
     // Corrupt or unavailable storage (private mode, quota) — just re-unlock.
     return null;
   }
 }
 
-function writeCache(vault) {
+function writeCache(session) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ fingerprint: FINGERPRINT, vault }));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ fingerprint: FINGERPRINT, session }));
   } catch {
     // Caching is a convenience; failing to persist must not block the unlock.
   }
 }
 
 /**
- * Holds the decrypted travel document vault for the session. Once unlocked the
- * contents are cached locally so the QR codes come straight up on later visits
- * without re-deriving the key.
+ * Holds what the trip passphrase unlocks: the decrypted travel document vault,
+ * and the token that lets this browser add to the shared buy list. Both are
+ * cached locally so a later visit comes straight up without re-deriving keys.
  */
 export function useVault() {
-  const [vault, setVault] = useState(readCache);
+  const [session, setSession] = useState(readCache);
   const [error, setError] = useState(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
 
@@ -53,9 +56,13 @@ export function useVault() {
     setIsUnlocking(true);
     setError(null);
     try {
-      const decrypted = await decryptJson(envelope, passphrase);
-      writeCache(decrypted);
-      setVault(decrypted);
+      // Decrypt first: it is what proves the passphrase is right. Deriving the
+      // write token from a wrong passphrase would just yield a token Supabase
+      // rejects, with no way to tell the user why.
+      const vault = await decryptJson(envelope, passphrase);
+      const unlocked = { vault, writeToken: await deriveWriteToken(passphrase) };
+      writeCache(unlocked);
+      setSession(unlocked);
       return true;
     } catch (cause) {
       setError(cause instanceof WrongPassphraseError ? '通行碼錯誤，請再試一次' : '解鎖失敗，請重新整理後再試');
@@ -72,15 +79,18 @@ export function useVault() {
     } catch {
       // Nothing to clean up if storage is unavailable.
     }
-    setVault(null);
+    setSession(null);
     setError(null);
   }, []);
 
-  const groupsForDay = useCallback((dayId) => vault?.days?.[String(dayId)] ?? [], [vault]);
+  const groupsForDay = useCallback(
+    (dayId) => session?.vault?.days?.[String(dayId)] ?? [],
+    [session]
+  );
 
   let status = VAULT_STATUS.locked;
-  if (vault) status = VAULT_STATUS.unlocked;
+  if (session) status = VAULT_STATUS.unlocked;
   else if (isUnlocking) status = VAULT_STATUS.unlocking;
 
-  return { status, error, unlock, lock, groupsForDay };
+  return { status, error, unlock, lock, groupsForDay, writeToken: session?.writeToken ?? null };
 }

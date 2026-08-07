@@ -10,7 +10,21 @@
  */
 
 const TABLE = 'buy_list_items';
-const COLUMNS = 'id,name,note,area_key,added_by,is_bought,created_at';
+
+/**
+ * What a list read pulls back.
+ *
+ * `image_full` is deliberately absent and must stay that way. It is up to
+ * 400 KB per row and the list is re-read every time the tab becomes visible —
+ * i.e. every time a phone unlocks in Tokyo — so including it would put
+ * megabytes on roaming data. `image_thumb` is a couple of KB and rides along.
+ * A test asserts this.
+ */
+export const COLUMNS = 'id,name,note,area_key,added_by,is_bought,created_at,link,image_thumb';
+
+/** Fetched one row at a time, only when someone opens a photo. */
+const FULL_IMAGE_COLUMN = 'image_full';
+
 const WRITE_TOKEN_HEADER = 'x-buy-list-token';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? '';
@@ -34,7 +48,7 @@ const baseHeaders = () => ({
   Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
 });
 
-const fromRow = (row) => ({
+export const fromRow = (row) => ({
   id: row.id,
   name: row.name,
   note: row.note,
@@ -42,6 +56,8 @@ const fromRow = (row) => ({
   addedBy: row.added_by,
   isBought: row.is_bought,
   createdAt: row.created_at,
+  link: row.link ?? null,
+  imageThumb: row.image_thumb ?? null,
 });
 
 async function describeFailure(response) {
@@ -103,8 +119,73 @@ export async function insertItem(item, writeToken) {
       note: item.note,
       area_key: item.areaKey,
       added_by: item.addedBy,
+      link: item.link,
+      image_thumb: item.imageThumb,
+      image_full: item.imageFull,
     }),
   });
+
+  return fromRow(rows[0]);
+}
+
+/**
+ * Pulls the large version of one item's photo. Kept out of the list read on
+ * purpose — see COLUMNS.
+ *
+ * @param {string} id
+ * @returns {Promise<string|null>} A data URL, or null if the item has no photo
+ */
+export async function fetchItemImage(id) {
+  const rows = await request(
+    `${TABLE}?id=eq.${encodeURIComponent(id)}&select=${FULL_IMAGE_COLUMN}`,
+    { headers: baseHeaders() }
+  );
+  return rows[0]?.image_full ?? null;
+}
+
+/**
+ * Attaches or replaces the photo and link on an existing item.
+ *
+ * Unlike the name and the note, these two are rewritable — migration 0003
+ * grants UPDATE on them so a photo can be added to something already on the
+ * list. The two image columns always move together because a CHECK constraint
+ * requires both or neither.
+ *
+ * @param {string} id
+ * @param {{link?: string|null, imageThumb?: string|null, imageFull?: string|null}} media
+ *        Only the keys present are written
+ * @param {string} writeToken
+ * @returns {Promise<object>} The updated item
+ */
+export async function setItemMedia(id, media, writeToken) {
+  const body = {};
+  if ('link' in media) body.link = media.link;
+  if ('imageThumb' in media) {
+    body.image_thumb = media.imageThumb;
+    body.image_full = media.imageFull ?? null;
+  }
+
+  if (Object.keys(body).length === 0) {
+    throw new BuyListError('沒有要更新的內容');
+  }
+
+  const rows = await request(
+    `${TABLE}?id=eq.${encodeURIComponent(id)}&select=${COLUMNS}`,
+    {
+      method: 'PATCH',
+      headers: {
+        ...baseHeaders(),
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+        [WRITE_TOKEN_HEADER]: writeToken,
+      },
+      body: JSON.stringify(body),
+    }
+  );
+
+  // As with the bought flag, RLS filters a rejected update rather than
+  // refusing it, so a stale token comes back as zero rows.
+  if (!rows.length) throw new BuyListError('無法更新，請重新解鎖通行碼或重新整理');
 
   return fromRow(rows[0]);
 }

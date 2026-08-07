@@ -7,7 +7,7 @@ import { useBuyList, BUY_LIST_STATUS } from '../hooks/useBuyList.js';
 
 const HERO_COLOR = '#8C5A2B';
 
-function Section({ title, items, areas, canWrite, onToggle }) {
+function Section({ title, items, areas, canWrite, isSaving, onToggle, onAttachMedia }) {
   if (!items.length) return null;
 
   return (
@@ -22,7 +22,9 @@ function Section({ title, items, areas, canWrite, onToggle }) {
             item={item}
             area={item.areaKey ? areas[item.areaKey] : null}
             canWrite={canWrite}
+            isSaving={isSaving}
             onToggle={onToggle}
+            onAttachMedia={onAttachMedia}
           />
         ))}
       </div>
@@ -45,10 +47,8 @@ function Notice({ children }) {
  */
 export default function BuyList({ areas, vault }) {
   const areaKeys = useMemo(() => Object.keys(areas), [areas]);
-  const { items, status, error, isSaving, canWrite, addItem, toggleBought } = useBuyList(
-    vault.writeToken,
-    areaKeys
-  );
+  const { items, status, error, isSaving, canWrite, addItem, toggleBought, attachMedia } =
+    useBuyList(vault.writeToken, areaKeys);
 
   const outstanding = items.filter((item) => !item.isBought);
   const bought = items.filter((item) => item.isBought);
@@ -118,14 +118,18 @@ export default function BuyList({ areas, vault }) {
                 items={outstanding}
                 areas={areas}
                 canWrite={canWrite}
+                isSaving={isSaving}
                 onToggle={toggleBought}
+                onAttachMedia={attachMedia}
               />
               <Section
                 title="DONE・已入手"
                 items={bought}
                 areas={areas}
                 canWrite={canWrite}
+                isSaving={isSaving}
                 onToggle={toggleBought}
+                onAttachMedia={attachMedia}
               />
             </div>
           )}

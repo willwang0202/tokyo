@@ -3,10 +3,11 @@ import {
   fetchItems,
   insertItem,
   setItemBought,
+  setItemMedia,
   isBuyListConfigured,
   BuyListError,
 } from '../lib/buyListApi.js';
-import { normaliseDraft } from '../lib/buyListItem.js';
+import { normaliseDraft, normaliseMedia } from '../lib/buyListItem.js';
 
 export const BUY_LIST_STATUS = {
   unconfigured: 'unconfigured',
@@ -20,6 +21,10 @@ const byOutstandingThenAge = (a, b) =>
   Number(a.isBought) - Number(b.isBought) || a.createdAt.localeCompare(b.createdAt);
 
 const sorted = (items) => [...items].sort(byOutstandingThenAge);
+
+/** Swaps one item for an updated copy, keeping the list ordered. */
+const replaceItem = (replacement) => (current) =>
+  sorted(current.map((each) => (each.id === replacement.id ? replacement : each)));
 
 const messageFor = (cause, fallback) => {
   if (cause instanceof BuyListError) return cause.message;
@@ -105,9 +110,6 @@ export function useBuyList(writeToken, areaKeys) {
       }
 
       const next = { ...item, isBought: !item.isBought };
-      const replaceItem = (replacement) => (current) =>
-        sorted(current.map((each) => (each.id === replacement.id ? replacement : each)));
-
       setItems(replaceItem(next));
       setError(null);
 
@@ -121,5 +123,45 @@ export function useBuyList(writeToken, areaKeys) {
     [writeToken]
   );
 
-  return { items, status, error, isSaving, canWrite: Boolean(writeToken), addItem, toggleBought, refresh };
+  /**
+   * Attaches or replaces a photo or a link on an item already on the list.
+   *
+   * Unlike everything else about an existing row, these are rewritable. Only
+   * the keys passed are written, so adding a link leaves a photo alone.
+   *
+   * @param {object} item
+   * @param {{link?: string, imageThumb?: string, imageFull?: string}} changes
+   * @returns {Promise<{ok: boolean, message?: string}>} `message` is user-facing
+   */
+  const attachMedia = useCallback(
+    async (item, changes) => {
+      const validation = normaliseMedia(changes);
+      if (!validation.ok) return validation;
+      if (!writeToken) return { ok: false, message: '請先用通行碼解鎖才能編輯' };
+
+      setIsSaving(true);
+      try {
+        setItems(replaceItem(await setItemMedia(item.id, validation.media, writeToken)));
+        setError(null);
+        return { ok: true };
+      } catch (cause) {
+        return { ok: false, message: messageFor(cause, 'Buy list media update failed') };
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [writeToken]
+  );
+
+  return {
+    items,
+    status,
+    error,
+    isSaving,
+    canWrite: Boolean(writeToken),
+    addItem,
+    toggleBought,
+    attachMedia,
+    refresh,
+  };
 }

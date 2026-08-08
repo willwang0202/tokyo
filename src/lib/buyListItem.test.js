@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import {
   normaliseDraft,
-  normaliseMedia,
+  normaliseEdit,
   MAX_NAME_LENGTH,
   MAX_NOTE_LENGTH,
   MAX_ADDED_BY_LENGTH,
@@ -123,21 +123,65 @@ describe('normaliseDraft', () => {
   });
 });
 
-describe('normaliseMedia link handling', () => {
-  test('assumes https for a bare host, since typing a scheme on a phone is a chore', () => {
-    const result = normaliseMedia({ link: 'amiami.jp' });
+describe('normaliseEdit text handling', () => {
+  test('trims a corrected name', () => {
+    // Arrange + Act
+    const result = normaliseEdit({ name: '  皮卡丘玩偶  ' });
 
-    expect(result).toEqual({ ok: true, media: { link: 'https://amiami.jp/' } });
+    // Assert
+    expect(result).toEqual({ ok: true, edit: { name: '皮卡丘玩偶' } });
+  });
+
+  // The column is NOT NULL, so a blank name would be refused by the database.
+  // Catching it here means the editor says why instead of failing on save.
+  test('refuses to blank out a name', () => {
+    const result = normaliseEdit({ name: '   ' });
+
+    expect(result).toEqual({ ok: false, message: '請輸入想買的東西' });
+  });
+
+  test('rejects a corrected name longer than the column allows', () => {
+    const result = normaliseEdit({ name: 'あ'.repeat(MAX_NAME_LENGTH + 1) });
+
+    expect(result.message).toBe(`品項最多 ${MAX_NAME_LENGTH} 個字`);
+  });
+
+  test('does let a note be cleared, unlike the name', () => {
+    const result = normaliseEdit({ note: '  ' });
+
+    expect(result).toEqual({ ok: true, edit: { note: null } });
+  });
+
+  test('rejects a note longer than the column allows', () => {
+    const result = normaliseEdit({ note: 'x'.repeat(MAX_NOTE_LENGTH + 1) });
+
+    expect(result.message).toBe(`備註最多 ${MAX_NOTE_LENGTH} 個字`);
+  });
+
+  // Which area an item belongs to and who asked for it have no UPDATE grant,
+  // so letting them through here would produce a confusing failure at the API.
+  test.each(['areaKey', 'addedBy'])('ignores %s, which the database will not update', (field) => {
+    const result = normaliseEdit({ name: '藥妝', [field]: 'shibuya' });
+
+    expect(result.edit).toEqual({ name: '藥妝' });
+  });
+});
+
+describe('normaliseEdit link handling', () => {
+  test('assumes https for a bare host, since typing a scheme on a phone is a chore', () => {
+    const result = normaliseEdit({ link: 'amiami.jp' });
+
+    expect(result).toEqual({ ok: true, edit: { link: 'https://amiami.jp/' } });
   });
 
   test('leaves an explicit scheme alone', () => {
-    expect(normaliseMedia({ link: 'http://example.com/a?b=1' }).media.link).toBe(
+    expect(normaliseEdit({ link: 'http://example.com/a?b=1' }).edit.link).toBe(
       'http://example.com/a?b=1'
     );
   });
 
   test('keeps a host with a port intact when the scheme is spelled out', () => {
-    expect(normaliseMedia({ link: 'https://shop.example.com:8080/x' }).media.link).toBe(
+    expect(normaliseEdit({ link: 'https://shop.example.com:8080/x' }).edit.link).toBe(
       'https://shop.example.com:8080/x'
     );
   });
@@ -146,13 +190,13 @@ describe('normaliseMedia link handling', () => {
   // one. Pasting it with https:// in front works, and product links have no
   // ports anyway.
   test('asks for a scheme when a bare host carries a port', () => {
-    const result = normaliseMedia({ link: 'shop.example.com:8080/x' });
+    const result = normaliseEdit({ link: 'shop.example.com:8080/x' });
 
     expect(result).toEqual({ ok: false, message: '連結請用 http 或 https 開頭' });
   });
 
   test('treats a blank link as no link at all', () => {
-    expect(normaliseMedia({ link: '   ' })).toEqual({ ok: true, media: { link: null } });
+    expect(normaliseEdit({ link: '   ' })).toEqual({ ok: true, edit: { link: null } });
   });
 
   // The database CHECK is the real gate, but a rejected paste should never
@@ -165,24 +209,24 @@ describe('normaliseMedia link handling', () => {
     'vbscript:msgbox(1)',
     'file:///etc/passwd',
   ])('refuses a non-http(s) URL: %s', (link) => {
-    const result = normaliseMedia({ link });
+    const result = normaliseEdit({ link });
 
     expect(result.ok).toBe(false);
   });
 
   test('rejects a link longer than the column allows', () => {
-    const result = normaliseMedia({ link: `https://example.com/${'a'.repeat(MAX_LINK_LENGTH)}` });
+    const result = normaliseEdit({ link: `https://example.com/${'a'.repeat(MAX_LINK_LENGTH)}` });
 
     expect(result.ok).toBe(false);
     expect(result.message).toBe(`連結最多 ${MAX_LINK_LENGTH} 個字`);
   });
 });
 
-describe('normaliseMedia image handling', () => {
+describe('normaliseEdit image handling', () => {
   test('accepts a well-formed pair', () => {
-    expect(normaliseMedia({ imageThumb: THUMB, imageFull: FULL })).toEqual({
+    expect(normaliseEdit({ imageThumb: THUMB, imageFull: FULL })).toEqual({
       ok: true,
-      media: { imageThumb: THUMB, imageFull: FULL },
+      edit: { imageThumb: THUMB, imageFull: FULL },
     });
   });
 
@@ -190,7 +234,7 @@ describe('normaliseMedia image handling', () => {
     ['thumbnail without a full image', { imageThumb: THUMB }],
     ['full image without a thumbnail', { imageFull: FULL }],
   ])('refuses a half pair — %s', (_label, changes) => {
-    const result = normaliseMedia(changes);
+    const result = normaliseEdit(changes);
 
     expect(result.ok).toBe(false);
     expect(result.message).toBe('照片處理失敗，請重新選一次');
@@ -202,45 +246,51 @@ describe('normaliseMedia image handling', () => {
     ['a bare URL', 'https://example.com/a.webp'],
     ['something with no base64 payload', 'data:image/webp;base64,'],
   ])('refuses %s', (_label, imageThumb) => {
-    expect(normaliseMedia({ imageThumb, imageFull: FULL }).ok).toBe(false);
+    expect(normaliseEdit({ imageThumb, imageFull: FULL }).ok).toBe(false);
   });
 
   test('refuses an image over the column cap', () => {
     const oversized = `data:image/webp;base64,${'A'.repeat(MAX_FULL_CHARS)}`;
 
-    expect(normaliseMedia({ imageThumb: THUMB, imageFull: oversized }).ok).toBe(false);
+    expect(normaliseEdit({ imageThumb: THUMB, imageFull: oversized }).ok).toBe(false);
   });
 
   test('refuses a thumbnail over its own, much smaller cap', () => {
     const oversized = `data:image/webp;base64,${'A'.repeat(MAX_THUMB_CHARS)}`;
 
-    expect(normaliseMedia({ imageThumb: oversized, imageFull: FULL }).ok).toBe(false);
+    expect(normaliseEdit({ imageThumb: oversized, imageFull: FULL }).ok).toBe(false);
   });
 });
 
-describe('normaliseMedia as a patch', () => {
+describe('normaliseEdit as a patch', () => {
+  test('carries the wording and the photo together when both changed', () => {
+    const result = normaliseEdit({ name: '藥妝', imageThumb: THUMB, imageFull: FULL });
+
+    expect(result.edit).toEqual({ name: '藥妝', imageThumb: THUMB, imageFull: FULL });
+  });
+
   // The whole point: attaching a link must not blank out someone else's photo.
   test('returns only the keys it was given', () => {
-    expect(normaliseMedia({ link: 'https://example.com/' })).toEqual({
+    expect(normaliseEdit({ link: 'https://example.com/' })).toEqual({
       ok: true,
-      media: { link: 'https://example.com/' },
+      edit: { link: 'https://example.com/' },
     });
   });
 
   test('omits the link entirely when only a photo is being attached', () => {
-    const result = normaliseMedia({ imageThumb: THUMB, imageFull: FULL });
+    const result = normaliseEdit({ imageThumb: THUMB, imageFull: FULL });
 
-    expect('link' in result.media).toBe(false);
+    expect('link' in result.edit).toBe(false);
   });
 
   test('an explicitly blank link is a removal, not an omission', () => {
-    const result = normaliseMedia({ link: '' });
+    const result = normaliseEdit({ link: '' });
 
-    expect('link' in result.media).toBe(true);
-    expect(result.media.link).toBeNull();
+    expect('link' in result.edit).toBe(true);
+    expect(result.edit.link).toBeNull();
   });
 
   test('an empty patch is valid and changes nothing', () => {
-    expect(normaliseMedia({})).toEqual({ ok: true, media: {} });
+    expect(normaliseEdit({})).toEqual({ ok: true, edit: {} });
   });
 });

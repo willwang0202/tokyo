@@ -85,14 +85,37 @@ describe('fromRow', () => {
   });
 });
 
-describe('setItemMedia', () => {
+describe('updateItem', () => {
+  test('writes corrected wording under the column names Postgres uses', async () => {
+    const { updateItem } = await loadApi();
+    const fetchMock = respondWith([ROW]);
+
+    await updateItem('abc', { name: '皮卡丘玩偶', note: '兩個' }, 'a-write-token');
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      name: '皮卡丘玩偶',
+      note: '兩個',
+    });
+  });
+
+  // area_key and added_by have no UPDATE grant; sending them would make
+  // Postgres reject the whole PATCH, taking the valid changes down with it.
+  test.each(['areaKey', 'addedBy'])('never sends %s, which has no UPDATE grant', async (field) => {
+    const { updateItem } = await loadApi();
+    const fetchMock = respondWith([ROW]);
+
+    await updateItem('abc', { name: '藥妝', [field]: 'shibuya' }, 'a-write-token');
+
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ name: '藥妝' });
+  });
+
   test('sends only the keys being changed, so a link never blanks a photo', async () => {
     // Arrange
-    const { setItemMedia } = await loadApi();
+    const { updateItem } = await loadApi();
     const fetchMock = respondWith([ROW]);
 
     // Act
-    await setItemMedia('abc', { link: 'https://example.com/' }, 'a-write-token');
+    await updateItem('abc', { link: 'https://example.com/' }, 'a-write-token');
 
     // Assert
     const [, init] = fetchMock.mock.calls[0];
@@ -100,10 +123,10 @@ describe('setItemMedia', () => {
   });
 
   test('moves both image columns together, because a CHECK requires the pair', async () => {
-    const { setItemMedia } = await loadApi();
+    const { updateItem } = await loadApi();
     const fetchMock = respondWith([ROW]);
 
-    await setItemMedia(
+    await updateItem(
       'abc',
       { imageThumb: 'data:image/webp;base64,AAAA', imageFull: 'data:image/jpeg;base64,BBBB' },
       'a-write-token'
@@ -116,27 +139,27 @@ describe('setItemMedia', () => {
   });
 
   test('carries the write token in the header the RLS policy reads', async () => {
-    const { setItemMedia } = await loadApi();
+    const { updateItem } = await loadApi();
     const fetchMock = respondWith([ROW]);
 
-    await setItemMedia('abc', { link: 'https://example.com/' }, 'a-write-token');
+    await updateItem('abc', { link: 'https://example.com/' }, 'a-write-token');
 
     expect(fetchMock.mock.calls[0][1].headers['x-buy-list-token']).toBe('a-write-token');
   });
 
   test('refuses a patch with nothing in it instead of sending an empty PATCH', async () => {
-    const { setItemMedia } = await loadApi();
+    const { updateItem } = await loadApi();
     const fetchMock = respondWith([ROW]);
 
-    await expect(setItemMedia('abc', {}, 'a-write-token')).rejects.toThrow('沒有要更新的內容');
+    await expect(updateItem('abc', {}, 'a-write-token')).rejects.toThrow('沒有要更新的內容');
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   test('reads zero returned rows as a stale token, since RLS filters rather than refuses', async () => {
-    const { setItemMedia } = await loadApi();
+    const { updateItem } = await loadApi();
     respondWith([]);
 
-    await expect(setItemMedia('abc', { link: 'https://example.com/' }, 'stale')).rejects.toThrow(
+    await expect(updateItem('abc', { link: 'https://example.com/' }, 'stale')).rejects.toThrow(
       '無法更新，請重新解鎖通行碼或重新整理'
     );
   });

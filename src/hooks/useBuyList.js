@@ -3,11 +3,11 @@ import {
   fetchItems,
   insertItem,
   setItemBought,
-  setItemMedia,
+  updateItem,
   isBuyListConfigured,
   BuyListError,
 } from '../lib/buyListApi.js';
-import { normaliseDraft, normaliseMedia } from '../lib/buyListItem.js';
+import { normaliseDraft, normaliseEdit } from '../lib/buyListItem.js';
 
 export const BUY_LIST_STATUS = {
   unconfigured: 'unconfigured',
@@ -124,28 +124,29 @@ export function useBuyList(writeToken, areaKeys) {
   );
 
   /**
-   * Attaches or replaces a photo or a link on an item already on the list.
+   * Corrects an item already on the list: its wording, its link, its photo.
    *
-   * Unlike everything else about an existing row, these are rewritable. Only
-   * the keys passed are written, so adding a link leaves a photo alone.
+   * Only the keys passed are written, so fixing a typo leaves a photo alone.
+   * The area and who asked for it are not editable and are not accepted here.
    *
    * @param {object} item
-   * @param {{link?: string, imageThumb?: string, imageFull?: string}} changes
+   * @param {{name?: string, note?: string, link?: string,
+   *          imageThumb?: string, imageFull?: string}} changes
    * @returns {Promise<{ok: boolean, message?: string}>} `message` is user-facing
    */
-  const attachMedia = useCallback(
+  const editItem = useCallback(
     async (item, changes) => {
-      const validation = normaliseMedia(changes);
+      const validation = normaliseEdit(changes);
       if (!validation.ok) return validation;
       if (!writeToken) return { ok: false, message: '請先用通行碼解鎖才能編輯' };
 
       setIsSaving(true);
       try {
-        setItems(replaceItem(await setItemMedia(item.id, validation.media, writeToken)));
+        setItems(replaceItem(await updateItem(item.id, validation.edit, writeToken)));
         setError(null);
         return { ok: true };
       } catch (cause) {
-        return { ok: false, message: messageFor(cause, 'Buy list media update failed') };
+        return { ok: false, message: messageFor(cause, 'Buy list edit failed') };
       } finally {
         setIsSaving(false);
       }
@@ -161,7 +162,7 @@ export function useBuyList(writeToken, areaKeys) {
     canWrite: Boolean(writeToken),
     addItem,
     toggleBought,
-    attachMedia,
+    editItem,
     refresh,
   };
 }

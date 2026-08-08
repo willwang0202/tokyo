@@ -1,14 +1,13 @@
 /**
  * Validation for a buy-list entry on its way into the database.
  *
- * Rows are append-only — nothing can be deleted, and of the original fields
- * only the bought flag can ever change — so a typo or an empty row is
- * permanent. Everything is checked here before it is sent, and again by CHECK
- * constraints in the migrations.
+ * Nothing is ever deleted, so a row is permanent once added. Its wording is
+ * not: the name, note, photo and link can all be corrected afterwards through
+ * `normaliseEdit`. The area and who asked for it are fixed at insert, which is
+ * why only `normaliseDraft` validates them.
  *
- * A photo and a link are the exception: both can be attached to an item that is
- * already on the list, and both can be replaced. `normaliseMedia` is the path
- * for that, and it deliberately does not require a name.
+ * Everything is checked here before it is sent, and again by CHECK constraints
+ * in the migrations — the anon key is public, so the database is the real gate.
  *
  * Lengths are counted in code points rather than `String.length` so a Japanese
  * or Chinese item name is not cut short by surrogate pairs (e.g. emoji).
@@ -35,6 +34,22 @@ const trimmedOrNull = (value) => {
 };
 
 const invalid = (message) => ({ ok: false, message });
+
+/** Correctable, but never blankable — the column is NOT NULL. */
+const nameFrom = (value) => {
+  const name = trimmedOrNull(value);
+  if (!name) return invalid('請輸入想買的東西');
+  if (countCharacters(name) > MAX_NAME_LENGTH) return invalid(`品項最多 ${MAX_NAME_LENGTH} 個字`);
+  return { ok: true, name };
+};
+
+const noteFrom = (value) => {
+  const note = trimmedOrNull(value);
+  if (note && countCharacters(note) > MAX_NOTE_LENGTH) {
+    return invalid(`備註最多 ${MAX_NOTE_LENGTH} 個字`);
+  }
+  return { ok: true, note };
+};
 
 /**
  * Parses a pasted URL, assuming https only when no scheme was given at all.
@@ -99,35 +114,48 @@ const imagesFrom = (draft) => {
 };
 
 /**
- * The photo and link half of an item, on its own.
+ * The rewritable half of an item: its wording, its link and its photo.
  *
- * Only the keys actually present on `draft` come back, because this doubles as
- * a patch for an item already on the list: adding a link must not blank out a
- * photo someone else attached. The two image keys always travel together.
+ * Only the keys actually present on `changes` come back, because this is a
+ * patch for a row already on the list — fixing a typo must not blank out a
+ * photo someone else attached. The two image keys always travel together, as
+ * a CHECK constraint requires both or neither.
  *
- * @param {unknown} draft Any of `{link, imageThumb, imageFull}`
- * @returns {{ok: true, media: object} | {ok: false, message: string}}
+ * @param {unknown} changes Any of `{name, note, link, imageThumb, imageFull}`
+ * @returns {{ok: true, edit: object} | {ok: false, message: string}}
  *          `message` is user-facing zh-TW copy, safe to render as-is
  */
-export function normaliseMedia(draft) {
-  if (typeof draft !== 'object' || draft === null) return invalid('照片處理失敗，請重新選一次');
+export function normaliseEdit(changes) {
+  if (typeof changes !== 'object' || changes === null) return invalid('沒有要更新的內容');
 
-  const media = {};
+  const edit = {};
 
-  if ('link' in draft) {
-    const link = linkFrom(draft.link);
+  if ('name' in changes) {
+    const name = nameFrom(changes.name);
+    if (!name.ok) return name;
+    edit.name = name.name;
+  }
+
+  if ('note' in changes) {
+    const note = noteFrom(changes.note);
+    if (!note.ok) return note;
+    edit.note = note.note;
+  }
+
+  if ('link' in changes) {
+    const link = linkFrom(changes.link);
     if (!link.ok) return link;
-    media.link = link.link;
+    edit.link = link.link;
   }
 
-  if ('imageThumb' in draft || 'imageFull' in draft) {
-    const images = imagesFrom(draft);
+  if ('imageThumb' in changes || 'imageFull' in changes) {
+    const images = imagesFrom(changes);
     if (!images.ok) return images;
-    media.imageThumb = images.imageThumb;
-    media.imageFull = images.imageFull;
+    edit.imageThumb = images.imageThumb;
+    edit.imageFull = images.imageFull;
   }
 
-  return { ok: true, media };
+  return { ok: true, edit };
 }
 
 /**
@@ -141,14 +169,10 @@ export function normaliseMedia(draft) {
 export function normaliseDraft(draft, areaKeys) {
   if (typeof draft !== 'object' || draft === null) return invalid('請輸入想買的東西');
 
-  const name = trimmedOrNull(draft.name);
-  if (!name) return invalid('請輸入想買的東西');
-  if (countCharacters(name) > MAX_NAME_LENGTH) return invalid(`品項最多 ${MAX_NAME_LENGTH} 個字`);
-
-  const note = trimmedOrNull(draft.note);
-  if (note && countCharacters(note) > MAX_NOTE_LENGTH) {
-    return invalid(`備註最多 ${MAX_NOTE_LENGTH} 個字`);
-  }
+  // Everything a draft shares with an edit, validated in one place. A new row
+  // must be named, and normaliseEdit skips absent keys, so both are stated.
+  const edit = normaliseEdit({ ...draft, name: draft.name, note: draft.note });
+  if (!edit.ok) return edit;
 
   const addedBy = trimmedOrNull(draft.addedBy);
   if (addedBy && countCharacters(addedBy) > MAX_ADDED_BY_LENGTH) {
@@ -158,20 +182,17 @@ export function normaliseDraft(draft, areaKeys) {
   const areaKey = trimmedOrNull(draft.areaKey);
   if (areaKey && !areaKeys.includes(areaKey)) return invalid('請選擇行程中的區域');
 
-  const media = normaliseMedia(draft);
-  if (!media.ok) return media;
-
-  // A new row states every column, so absent media is an explicit null.
+  // A new row states every column, so anything absent is an explicit null.
   return {
     ok: true,
     item: {
-      name,
-      note,
+      name: edit.edit.name,
+      note: edit.edit.note ?? null,
       areaKey,
       addedBy,
-      link: media.media.link ?? null,
-      imageThumb: media.media.imageThumb ?? null,
-      imageFull: media.media.imageFull ?? null,
+      link: edit.edit.link ?? null,
+      imageThumb: edit.edit.imageThumb ?? null,
+      imageFull: edit.edit.imageFull ?? null,
     },
   };
 }

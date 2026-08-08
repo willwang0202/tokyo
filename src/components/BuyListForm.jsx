@@ -35,13 +35,18 @@ const emptyDraft = () => ({
   addedBy: readRememberedName(),
 });
 
+// Width is left to each field. Baking `w-full` in here would win over the
+// `w-24` on the row below — Tailwind resolves that by stylesheet order, not by
+// the order the classes are written — and collapse the area dropdown.
 const FIELD_CLASS =
-  'w-full px-4 py-2.5 rounded-xl bg-stone-100 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus-visible:ring-2';
+  'px-3.5 py-2 rounded-xl bg-stone-100 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none focus-visible:ring-2';
+
+const WIDE_FIELD_CLASS = `${FIELD_CLASS} w-full`;
 
 /**
- * Adds an item to the shared list. The name, note, area and asker can never be
- * changed afterwards — only the photo and link can — so the draft is validated
- * before it is sent and the copy says so.
+ * Adds an item to the shared list. The area and who asked for it are fixed for
+ * good once submitted — unlike the name, note, link and photo, which the row's
+ * own edit button can correct later — so the draft is validated before it goes.
  */
 export default function BuyListForm({ areas, isSaving, onAdd }) {
   const [draft, setDraft] = useState(emptyDraft);
@@ -75,14 +80,14 @@ export default function BuyListForm({ areas, isSaving, onAdd }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-5 shadow-sm space-y-2.5">
+    <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-4 shadow-sm space-y-2">
       <input
         value={draft.name}
         onChange={update('name')}
         maxLength={MAX_NAME_LENGTH}
         placeholder="想買什麼？例如 RG 獨角獸鋼彈"
         aria-label="品項"
-        className={FIELD_CLASS}
+        className={WIDE_FIELD_CLASS}
       />
 
       <input
@@ -91,7 +96,7 @@ export default function BuyListForm({ areas, isSaving, onAdd }) {
         maxLength={MAX_NOTE_LENGTH}
         placeholder="備註（選填）例如 本館限定、兩個"
         aria-label="備註"
-        className={FIELD_CLASS}
+        className={WIDE_FIELD_CLASS}
       />
 
       <input
@@ -101,10 +106,10 @@ export default function BuyListForm({ areas, isSaving, onAdd }) {
         placeholder="商品連結（選填）"
         aria-label="連結"
         inputMode="url"
-        className={FIELD_CLASS}
+        className={WIDE_FIELD_CLASS}
       />
 
-      <div className="flex gap-2.5">
+      <div className="flex gap-2">
         <select
           value={draft.areaKey}
           onChange={update('areaKey')}
@@ -127,17 +132,21 @@ export default function BuyListForm({ areas, isSaving, onAdd }) {
         />
       </div>
 
-      <ImagePicker image={image} onChange={setImage} onError={setMessage} disabled={isSaving} />
+      {/* The photo control and the submit share a row: both are one-tap, and it
+          keeps the whole form inside a phone screen alongside the list. */}
+      <div className="flex items-center gap-2">
+        <ImagePicker image={image} onChange={setImage} onError={setMessage} disabled={isSaving} />
 
-      <button
-        type="submit"
-        disabled={isSaving}
-        className="w-full flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-medium text-white transition-opacity disabled:opacity-50 focus:outline-none focus-visible:ring-2"
-        style={{ backgroundColor: '#1C1F26' }}
-      >
-        <Plus size={15} />
-        {isSaving ? '新增中…' : '加入清單'}
-      </button>
+        <button
+          type="submit"
+          disabled={isSaving}
+          className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-white transition-opacity disabled:opacity-50 focus:outline-none focus-visible:ring-2"
+          style={{ backgroundColor: '#1C1F26' }}
+        >
+          <Plus size={15} />
+          {isSaving ? '新增中…' : '加入清單'}
+        </button>
+      </div>
 
       {message && (
         <div className="flex items-center gap-1.5 pt-0.5 text-xs text-rose-600">

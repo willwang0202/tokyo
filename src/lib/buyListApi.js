@@ -144,25 +144,28 @@ export async function fetchItemImage(id) {
 }
 
 /**
- * Attaches or replaces the photo and link on an existing item.
+ * Rewrites the correctable parts of an existing item.
  *
- * Unlike the name and the note, these two are rewritable — migration 0003
- * grants UPDATE on them so a photo can be added to something already on the
- * list. The two image columns always move together because a CHECK constraint
- * requires both or neither.
+ * Migrations 0003 and 0004 grant column-level UPDATE on exactly these; the
+ * area and who asked for it are not among them and cannot be written here. The
+ * two image columns always move together because a CHECK requires both or
+ * neither.
  *
  * @param {string} id
- * @param {{link?: string|null, imageThumb?: string|null, imageFull?: string|null}} media
+ * @param {{name?: string, note?: string|null, link?: string|null,
+ *          imageThumb?: string|null, imageFull?: string|null}} changes
  *        Only the keys present are written
  * @param {string} writeToken
  * @returns {Promise<object>} The updated item
  */
-export async function setItemMedia(id, media, writeToken) {
+export async function updateItem(id, changes, writeToken) {
   const body = {};
-  if ('link' in media) body.link = media.link;
-  if ('imageThumb' in media) {
-    body.image_thumb = media.imageThumb;
-    body.image_full = media.imageFull ?? null;
+  if ('name' in changes) body.name = changes.name;
+  if ('note' in changes) body.note = changes.note;
+  if ('link' in changes) body.link = changes.link;
+  if ('imageThumb' in changes) {
+    body.image_thumb = changes.imageThumb;
+    body.image_full = changes.imageFull ?? null;
   }
 
   if (Object.keys(body).length === 0) {
@@ -191,8 +194,8 @@ export async function setItemMedia(id, media, writeToken) {
 }
 
 /**
- * Flips the bought flag. This is the only column an update is allowed to touch —
- * a trigger rejects anything else, and there is no delete policy at all.
+ * Flips the bought flag. Kept separate from `updateItem` because ticking an
+ * item off is an optimistic, one-tap action rather than a form submission.
  *
  * @param {string} id
  * @param {boolean} isBought

@@ -7,7 +7,7 @@ import { useBuyList, BUY_LIST_STATUS } from '../hooks/useBuyList.js';
 
 const HERO_COLOR = '#8C5A2B';
 
-function Section({ title, items, areas, canWrite, isSaving, onToggle, onEdit }) {
+function Section({ title, items, areas, canWrite, isSaving, onToggle, onEdit, onDelete }) {
   if (!items.length) return null;
 
   return (
@@ -25,6 +25,7 @@ function Section({ title, items, areas, canWrite, isSaving, onToggle, onEdit }) 
             isSaving={isSaving}
             onToggle={onToggle}
             onEdit={onEdit}
+            onDelete={onDelete}
           />
         ))}
       </div>
@@ -41,13 +42,13 @@ function Notice({ children }) {
 }
 
 /**
- * The shared buy list. Everyone sees the same list; adding an item or ticking
- * one off needs the trip passphrase. Items are never removed — bought ones just
- * move to the bottom — so the list doubles as a record of what was picked up.
+ * The shared buy list. Everyone sees the same list; adding an item, ticking one
+ * off and taking one down all need the trip passphrase. A bought item stays and
+ * moves to the bottom, so the list doubles as a record of what was picked up.
  */
 export default function BuyList({ areas, vault }) {
   const areaKeys = useMemo(() => Object.keys(areas), [areas]);
-  const { items, status, error, isSaving, canWrite, addItem, toggleBought, editItem } =
+  const { items, status, error, isSaving, canWrite, addItem, toggleBought, editItem, removeItem } =
     useBuyList(vault.writeToken, areaKeys);
 
   const outstanding = items.filter((item) => !item.isBought);
@@ -68,7 +69,7 @@ export default function BuyList({ areas, vault }) {
           )}
         </div>
         <p className="text-white/80 text-xs mt-1.5 leading-relaxed">
-          五個人共用一張清單，買到了打勾，項目不會消失。
+          五個人共用一張清單，買到了打勾，加錯了可以移除。
         </p>
       </div>
 
@@ -123,6 +124,7 @@ export default function BuyList({ areas, vault }) {
                 isSaving={isSaving}
                 onToggle={toggleBought}
                 onEdit={editItem}
+                onDelete={removeItem}
               />
               <Section
                 title="DONE・已入手"
@@ -132,6 +134,7 @@ export default function BuyList({ areas, vault }) {
                 isSaving={isSaving}
                 onToggle={toggleBought}
                 onEdit={editItem}
+                onDelete={removeItem}
               />
             </div>
           )}

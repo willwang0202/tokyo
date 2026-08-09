@@ -4,8 +4,9 @@ import BuyListEditor from './BuyListEditor.jsx';
 import BuyListPhotoLightbox from './BuyListPhotoLightbox.jsx';
 
 /**
- * One item on the list. Ticking it sets the bought flag — the row itself stays
- * forever, it just drops to the bottom of the list.
+ * One item on the list. Ticking it sets the bought flag — the item stays put,
+ * it just drops to the bottom of the list. Taking it off the list altogether is
+ * behind the pencil, where the editor keeps it under a confirmation.
  *
  * The card is a plain div rather than one big button, because a photo, a link
  * and an edit control all need to be tappable and nesting those inside a button
@@ -16,7 +17,7 @@ import BuyListPhotoLightbox from './BuyListPhotoLightbox.jsx';
  * it rather than one tall stack, so a row with a photo is about the height of
  * the photo instead of nearly three times it.
  */
-export default function BuyListRow({ item, area, canWrite, isSaving, onToggle, onEdit }) {
+export default function BuyListRow({ item, area, canWrite, isSaving, onToggle, onEdit, onDelete }) {
   const { name, note, addedBy, isBought, link, imageThumb } = item;
   const [isEditing, setIsEditing] = useState(false);
   const [isPhotoOpen, setIsPhotoOpen] = useState(false);
@@ -125,6 +126,7 @@ export default function BuyListRow({ item, area, canWrite, isSaving, onToggle, o
           item={item}
           isSaving={isSaving}
           onSave={onEdit}
+          onDelete={onDelete}
           onClose={() => setIsEditing(false)}
         />
       )}

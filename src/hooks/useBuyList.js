@@ -3,6 +3,7 @@ import {
   fetchItems,
   insertItem,
   setItemBought,
+  softDeleteItem,
   updateItem,
   isBuyListConfigured,
   BuyListError,
@@ -154,6 +155,39 @@ export function useBuyList(writeToken, areaKeys) {
     [writeToken]
   );
 
+  /**
+   * Takes an item off the list.
+   *
+   * The row is not destroyed — `softDeleteItem` raises a flag the list read
+   * filters on — but from here it is gone, so the caller is expected to have
+   * confirmed with whoever tapped it first.
+   *
+   * Unlike `toggleBought` this is not optimistic. A row that vanished and then
+   * reappeared because the write was refused reads as a bug, and there is no
+   * undo in the UI to soften it.
+   *
+   * @param {object} item
+   * @returns {Promise<{ok: boolean, message?: string}>} `message` is user-facing
+   */
+  const removeItem = useCallback(
+    async (item) => {
+      if (!writeToken) return { ok: false, message: '請先用通行碼解鎖才能刪除' };
+
+      setIsSaving(true);
+      try {
+        await softDeleteItem(item.id, writeToken);
+        setItems((current) => current.filter((each) => each.id !== item.id));
+        setError(null);
+        return { ok: true };
+      } catch (cause) {
+        return { ok: false, message: messageFor(cause, 'Buy list delete failed') };
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [writeToken]
+  );
+
   return {
     items,
     status,
@@ -163,6 +197,7 @@ export function useBuyList(writeToken, areaKeys) {
     addItem,
     toggleBought,
     editItem,
+    removeItem,
     refresh,
   };
 }

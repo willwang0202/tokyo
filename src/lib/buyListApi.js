@@ -1,12 +1,13 @@
 /**
  * Buy-list persistence, talking to Supabase's PostgREST endpoint directly.
  *
- * Three calls (list, add, toggle) do not justify the supabase-js bundle, and
- * the write token has to travel as a per-request header — which the client
- * only accepts at construction time. Plain `fetch` keeps both simple.
+ * A handful of calls do not justify the supabase-js bundle, and the write token
+ * has to travel as a per-request header — which the client only accepts at
+ * construction time. Plain `fetch` keeps both simple.
  *
- * The anon key is public by design; every rule that matters (append-only, no
- * deletes, write token) is enforced by Row Level Security in the migration.
+ * The anon key is public by design; every rule that matters (no deletes, fixed
+ * area and author, write token) is enforced by Row Level Security in the
+ * migrations. Removing an item raises a flag here rather than deleting a row.
  */
 
 const TABLE = 'buy_list_items';
@@ -90,11 +91,11 @@ async function request(path, init) {
 }
 
 /**
- * @returns {Promise<object[]>} Every item, outstanding ones first, oldest first
+ * @returns {Promise<object[]>} Every live item, outstanding first, oldest first
  */
 export async function fetchItems() {
   const rows = await request(
-    `${TABLE}?select=${COLUMNS}&order=is_bought.asc,created_at.asc`,
+    `${TABLE}?select=${COLUMNS}&is_deleted=is.false&order=is_bought.asc,created_at.asc`,
     { headers: baseHeaders() }
   );
   return rows.map(fromRow);
@@ -222,4 +223,39 @@ export async function setItemBought(id, isBought, writeToken) {
   if (!rows.length) throw new BuyListError('無法更新，請重新解鎖通行碼或重新整理');
 
   return fromRow(rows[0]);
+}
+
+/**
+ * Takes an item off the list by raising its `is_deleted` flag.
+ *
+ * This is a PATCH, not a DELETE, and there is no DELETE anywhere in this file
+ * on purpose — the table grants none and has no delete policy, so the row
+ * survives and `fetchItems` simply stops asking for it. Undoing one is an
+ * UPDATE in the Supabase SQL editor.
+ *
+ * Only the id comes back: an item can carry a 20 KB thumbnail, and the row
+ * count is the only thing the caller needs from the response.
+ *
+ * @param {string} id
+ * @param {string} writeToken
+ * @returns {Promise<void>}
+ */
+export async function softDeleteItem(id, writeToken) {
+  const rows = await request(
+    `${TABLE}?id=eq.${encodeURIComponent(id)}&select=id`,
+    {
+      method: 'PATCH',
+      headers: {
+        ...baseHeaders(),
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+        [WRITE_TOKEN_HEADER]: writeToken,
+      },
+      body: JSON.stringify({ is_deleted: true }),
+    }
+  );
+
+  // As everywhere else here, RLS filters a rejected write rather than refusing
+  // it, so a stale token is zero rows rather than a 403.
+  if (!rows.length) throw new BuyListError('無法刪除，請重新解鎖通行碼或重新整理');
 }

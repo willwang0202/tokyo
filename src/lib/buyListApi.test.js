@@ -85,6 +85,70 @@ describe('fromRow', () => {
   });
 });
 
+describe('fetchItems', () => {
+  test('asks the server to leave removed rows out', async () => {
+    // Arrange
+    const { fetchItems } = await loadApi();
+    const fetchMock = respondWith([ROW]);
+
+    // Act
+    await fetchItems();
+
+    // Assert
+    //
+    // Filtering here rather than after the fact keeps a removed item's photo
+    // off the wire entirely, which matters on roaming data.
+    expect(fetchMock.mock.calls[0][0]).toContain('is_deleted=is.false');
+  });
+});
+
+describe('softDeleteItem', () => {
+  test('flips a flag instead of issuing a DELETE, because rows are permanent', async () => {
+    // Arrange
+    const { softDeleteItem } = await loadApi();
+    const fetchMock = respondWith([{ id: 'abc' }]);
+
+    // Act
+    await softDeleteItem('abc', 'a-write-token');
+
+    // Assert
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(init.method).toBe('PATCH');
+    expect(JSON.parse(init.body)).toEqual({ is_deleted: true });
+    expect(url).toContain('id=eq.abc');
+  });
+
+  test('does not pull the row back, since the caller only drops it from the list', async () => {
+    const { softDeleteItem } = await loadApi();
+    const fetchMock = respondWith([{ id: 'abc' }]);
+
+    await softDeleteItem('abc', 'a-write-token');
+
+    // An item can carry a 20 KB thumbnail; the id is all that is needed to
+    // tell an applied update from one RLS filtered away.
+    expect(fetchMock.mock.calls[0][0]).toContain('select=id');
+    expect(fetchMock.mock.calls[0][0]).not.toContain('image_thumb');
+  });
+
+  test('carries the write token in the header the RLS policy reads', async () => {
+    const { softDeleteItem } = await loadApi();
+    const fetchMock = respondWith([{ id: 'abc' }]);
+
+    await softDeleteItem('abc', 'a-write-token');
+
+    expect(fetchMock.mock.calls[0][1].headers['x-buy-list-token']).toBe('a-write-token');
+  });
+
+  test('reads zero returned rows as a stale token, since RLS filters rather than refuses', async () => {
+    const { softDeleteItem } = await loadApi();
+    respondWith([]);
+
+    await expect(softDeleteItem('abc', 'stale')).rejects.toThrow(
+      '無法刪除，請重新解鎖通行碼或重新整理'
+    );
+  });
+});
+
 describe('updateItem', () => {
   test('writes corrected wording under the column names Postgres uses', async () => {
     const { updateItem } = await loadApi();

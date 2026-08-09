@@ -5,7 +5,7 @@ import {
   ShoppingBag, Utensils, Gift, Zap, Train, Building2, Moon, Coffee,
   MapPin, X, Star, Map as MapIcon, List, Landmark, Camera, TreePine,
   Fish, Drama, Palette, PawPrint, Music, Mountain, BookOpen, Compass,
-  Gamepad2, Dog
+  Gamepad2, Dog, Van
 } from 'lucide-react';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
@@ -163,6 +163,7 @@ const DAYS = [
     events: [
       { time: '09:00', icon: PlaneTakeoff, title: '中華航空 CI220 松山 → 羽田', desc: '國際線建議提前 2.5 小時抵達機場', type: 'flight', maps: '台北松山機場' },
       { time: '13:10', icon: PlaneLanding, title: '抵達羽田機場', desc: '入境審查＋提領行李，預留 40-60 分鐘', type: 'flight', maps: '羽田空港 第3ターミナル' },
+      { time: '約 14:00', icon: Van, title: 'Klook 專車接送 → 舞浜', desc: '羽田 T3 入境大廳與司機會合，Toyota Alphard／Hiace 9 人座，五個人加行李一車搞定。司機自班機實際抵達起等候 90 分鐘，聯絡電話 +86-19130647407（CHINICHI CO LTD），訂單編號在 Klook App 裡。', type: 'transit' },
       { time: '約 15:00', icon: Hotel, title: 'Hilton Tokyo Bay', desc: '先寄放行李，正式入住晚點再辦理', area: 'bay', maps: 'Hilton Tokyo Bay' },
       { time: '16:00', icon: Castle, title: '東京迪士尼樂園', desc: 'After 3 護照 15:00 起入園，開放到 21:00，晚上的遊行和城堡投影是重頭戲', area: 'bay', maps: '東京ディズニーランド' },
       { time: '21:30', icon: Moon, title: '返回 Hilton Tokyo Bay', desc: '第一晚住宿', area: 'bay', showBadge: false, maps: 'Hilton Tokyo Bay' },
